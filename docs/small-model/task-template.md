@@ -5,6 +5,10 @@
 
 ## Rules for tasks
 
+- Preamble and closing are mandatory and always byte-identical:
+  START: "You are executing the task below verbatim: load the playbook with your
+  file tools first, then act autonomously until the 'Done when' criteria hold."
+  END: "Begin now."
 - ONE verb, ONE area. "Add an endpoint" ok; "add endpoint + redesign store" not ok.
 - Written imperative, includes: goal, exact files/paths, done criteria, and the
   playbook to follow.

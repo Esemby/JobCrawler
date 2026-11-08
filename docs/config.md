@@ -16,10 +16,20 @@ user asks what a setting does.
 
 ## Bootstrap settings
 
+Environment overrides (Phase 1 implementation; loaded in `internal/config`):
+
+| Env key | Type | Default | Validation | Help |
+|---|---|---|---|---|
+| JOBCRAWLER_BIND_ADDR | string | `:8090` | host:port; port 8080 FORBIDDEN | HTTP bind for the web UI. LAN interface only. Port 8080 is reserved for redirect.py on the Heart. |
+| JOBCRAWLER_LOG_LEVEL | string | `info` | debug, info, warn, error | Log verbosity. |
+| JOBCRAWLER_LOG_FORMAT | string | `text` | text, json | slog output format (stdout only; no chatty disk logs). |
+| JOBCRAWLER_DB_ENGINE | string | `sqlite` | sqlite, mariadb | Which Store implementation to open (ADR-0002). MariaDB not implemented until Phase 6; setting is validated now so config survives the jump. |
+
+Bootstrap-file settings (Phase 2, ADR-0002):
+
 | Key | Type | Default | Validation | Help |
 |---|---|---|---|---|
 | bootstrap.settings_path | string | `config.bootstrap.toml` | path exists | Where bootstrap config lives; overridden by env `JOBCRAWLER_CONFIG`. |
-| bootstrap.db_engine | string | `sqlite` | one of: sqlite, mariadb | Which Store implementation to open. |
 | bootstrap.db.dsn | string | `jobcrawler.db` (sqlite) | non-empty | Connection string for the chosen engine. Passwords go here; never logged, never shown clear. |
 
 ## Runtime settings

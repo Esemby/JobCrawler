@@ -26,7 +26,7 @@
 
 ## handoff.md contents (overwrite, never append)
 
-- Date, model, commit hash at end of session
+- Date, YOUR model name (not the previous session's), commit hash you made
 - Project state: which roadmap phase, where it stands (2-3 lines)
 - Next task: ONE task, written with `task-template.md`
 - Blockers + questions for the owner

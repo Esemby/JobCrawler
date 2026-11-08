@@ -10,4 +10,9 @@ each at least TWICE in a row.
 
 | Date | Task | Model | Passed unaided? | Failure cause | Doc fix made |
 |---|---|---|---|---|---|
-| (none yet) | | | | | |
+| 2026-11-08 | handover #0, attempt 1: append lesson | gpt-oss:20b (via opencode provider) | NO | treated structured task text as chat opener; zero tool use | task-template.md: mandatory preamble + "Begin now." |
+| 2026-11-08 | handover #0, attempt 2: same task | gpt-oss:20b | PARTIAL | lesson + commit correct; handoff not attributed to itself; empty final answer; tree was pre-polluted by cloud-model WIP (env fault, now a protocol rule) | how-to-work.md step 10: self-attribution checklist |
+
+Notes: attempt 2 ran against pre-polluted working tree (Phase 1 WIP present), so
+"criterion: git status clean" was unsatisfiable by design — assess future tests
+from a clean tree.

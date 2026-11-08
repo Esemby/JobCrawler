@@ -9,6 +9,10 @@ that prevents recurrence. Newest LAST. Never delete or edit old lines.
   machine has no HTTPS credentials, so HTTPS pushes fail with "could not read
   Username". Rule: push via SSH; if a new environment lacks the key, hand the
   owner one setup step, never store credentials.
+- 2026-11-08 — `template.ParseFS(files, "templates/status.html")` names templates
+  by FILE NAME, and `ExecuteTemplate(w, "status", ...)` 500s: template not found.
+  Rule: `ParseFS` → execute by file name unless templates `{{define}}` a name;
+  every handler-template pair asserts rendering in a test (caught at 22:04).
 
 Rules: one lesson = one insight + one rule. If a lesson needs context, link the file.
 
