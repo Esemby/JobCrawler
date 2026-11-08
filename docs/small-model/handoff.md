@@ -7,11 +7,12 @@ No history here. Newest state only.
 
 - Date: 2026-11-08
 - Model: GLM-5.3-Flash Free (cloud bootstrap agent)
-- Commit: see `git log --oneline -3` (session ended at ADR-0004 commit)
+- Commit: 5b48427 pushed to origin/main (see `git log --oneline -4`)
 
 ## Project state
 
 - Phase 0 complete except **handover test #0** (in progress with the owner).
+- Remote live at github.com/Esemby/JobCrawler (SSH remote, pushed, tracking main).
 - Owner answered all six Phase 0 questions → recorded in
   `docs/decisions/0004-owner-answers-phase0.md`. Key facts: Heart 3.9 GB RAM;
   EU + Norway, German + English (configurable filters); jobcrawler, MIT; first

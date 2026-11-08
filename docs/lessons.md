@@ -5,6 +5,11 @@ environment, or break something — before you commit the fix.
 *Result you should have:* one line below with date, what was learned, and the rule
 that prevents recurrence. Newest LAST. Never delete or edit old lines.
 
+- 2026-11-08 — The repo remote is SSH (`git@github.com:Esemby/JobCrawler.git`); the
+  machine has no HTTPS credentials, so HTTPS pushes fail with "could not read
+  Username". Rule: push via SSH; if a new environment lacks the key, hand the
+  owner one setup step, never store credentials.
+
 Rules: one lesson = one insight + one rule. If a lesson needs context, link the file.
 
 ## Lessons
