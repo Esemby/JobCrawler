@@ -4,8 +4,10 @@
 BINARY      := jobcrawler
 BINARY_ARM  := jobcrawler-arm64
 BIN_DIR     := bin
-VERSION     := $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
-LDFLAGS     := -s -w -X main.version=$(VERSION)
+VERSION     = $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+COMMIT      = $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
+DATE        = $(shell date -u +%Y-%m-%d)
+LDFLAGS     = -s -w -X github.com/Esemby/JobCrawler/internal/version.Version=$(VERSION) -X github.com/Esemby/JobCrawler/internal/version.Commit=$(COMMIT) -X github.com/Esemby/JobCrawler/internal/version.Date=$(DATE)
 
 .PHONY: build test lint run build-arm64 check clean
 

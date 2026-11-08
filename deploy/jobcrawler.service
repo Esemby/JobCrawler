@@ -1,0 +1,26 @@
+# jobcrawler systemd unit — install to /etc/systemd/system/jobcrawler.service
+# Facts: Heart runs other services; port 8080 belongs to redirect.py (never use).
+# Adjust MemoryMax only upward with the owner's approval (ADR-0004 budgets).
+
+[Unit]
+Description=jobcrawler — polite job crawler (LAN UI)
+After=network-online.target
+Documentation=https://github.com/Esemby/JobCrawler
+
+[Service]
+Type=simple
+ExecStart=/opt/jobcrawler/jobcrawler
+WorkingDirectory=/opt/jobcrawler
+Environment=JOBCRAWLER_BIND_ADDR=:8090
+Restart=on-failure
+RestartSec=5
+# RAM economics: idle <100MB, crawl peak <250MB (ADR-0004)
+MemoryMax=250M
+# SSD-wear economy: journald rate limiting on by default is fine; we log sparingly
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/jobcrawler
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
