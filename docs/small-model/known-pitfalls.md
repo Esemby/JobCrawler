@@ -17,12 +17,20 @@ Format: `- <symptom> → COUNTERMEASURE: <exact rule>`
   "Begin now." Vague preambles ("load the playbook") did NOT work reliably;
   naming the path did. Retries are expected: never assume a silent run means the
   task ran — verify acceptance criteria outputs yourself.
-- 2026-11-08 — Small model adrift starting in the parent workspace: it answers "I
-  have loaded AGENTS.md" while having read the WRONG file (workspace-level, not
-  the project's). → COUNTERMEASURE: sessions must start with working directory
-  `jobcrawler/`; any cross-directory task text pins the absolute path; a small
-  model that answers tasks before reading files is treated as mis-stepped, not
-  as evidence it read them.
+- 2026-11-08 — Evidence across 8 small-model runs: with the `explore` agent the
+  model acts and answers correctly (3/3); with the `general` agent it mostly
+  chat-opens or hallucinates tool output (1/5, and that one was partial).
+  Symptom class: tool dispatch via the ollama provider — NOT instruction-file
+  quality, since identical prompts through a different provider work.
+  → COUNTERMEASURE (provisional): read-based training tasks via `explore` are
+  reliable; small-model write/commit tasks wait until the provider behavior is
+  verified with the owner. Graduation criteria still require small-model write
+  tasks; do not lower them to escape this issue.
+  Second half: the small model says it "has loaded AGENTS.md" while having read
+  the WRONG file (workspace-level, not the project's). → COUNTERMEASURE: sessions
+  must start with working directory `jobcrawler/` (done: session moved into the
+  project dir so the project AGENTS.md is the auto-loaded one); a small model
+  that answers before reading is treated as mis-stepped, not as having read.
 
 Watch-list (predicted failure modes; promote to entries with evidence):
 
