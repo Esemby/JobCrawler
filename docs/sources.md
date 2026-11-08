@@ -20,7 +20,8 @@ forbid automated access.
 
 | Source | Method | Access notes / ToS | Status |
 |---|---|---|---|
-| (none yet — first source chosen in Phase 3 with the owner) | | | planned |
+| Greenhouse | Public JSON endpoint `boards-api.greenhouse.io` | Public, unauthenticated board JSON; verify ToS before implementing (ADR-0004: first source) | planned (Phase 3) |
+| Lever | Public JSON postings API | Public, unauthenticated; same ToS check rule | planned, after Greenhouse |
 
 ## Politeness contract (every source, no exceptions)
 

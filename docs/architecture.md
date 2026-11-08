@@ -61,6 +61,13 @@ Forbidden: `filter -> crawler`, any import of `internal/web` from non-web packag
 - The Heart is poor: batch DB writes, WAL mode, no raw HTML by default,
   graceful SIGTERM shutdown.
 
+## Job flags are per-user (ADR-0004)
+
+`Seen flags` (new / seen / applied / hidden) MUST be modeled as per-user rows from
+the first schema revision, even though Phase 1 ships with one implied user. The
+owner plans multi-user (friends) later; retrofitting identity onto shared flags
+would be expensive. Jobs themselves stay shared; only the flags are per user.
+
 ## Storage (ADR-0002, pre-decided)
 
 Default engine is local SQLite (WAL), so the Heart survives VPN/MariaDB outages.

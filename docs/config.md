@@ -35,7 +35,7 @@ user asks what a setting does.
 | sources.* | list | - | per-source | One entry per configured source; see `sources.md`. |
 | filters.* | lists | empty | see filter playbook | Blacklist, no-gos, must-haves, tags, location rules. |
 | review.enabled | bool | `false` | - | Stage 3 gate. System must work fully with this off. |
-| review.endpoint | string | (Ollama URL) | URL | Only used when review.enabled. |
+| review.endpoint | string | Flagship Ollama URL (http://<flagship-ip>:11434) | URL | Ollama runs on the Flagship (ADR-0004); Heart reaches it by IP, never localhost. |
 | review.model | string | (gpt-oss:20b) | - | Model name at the endpoint. |
 | review.daily_cap | int | `50` | ≥ 0 | Max AI review calls per day. 0 = unlimited. |
 

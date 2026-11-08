@@ -19,9 +19,11 @@ background and the facts that rarely change.
   `RestartSec=5`, stop with SIGTERM (graceful shutdown must work).
 - Zero telemetry. No secrets on disk in clear outside the config file the owner owns.
 
-## RAM budget (verify with the owner in Phase 0)
+## RAM budget
 
-- Idle target: < 100 MB. Crawl peak: < 250 MB.
+- Heart has ~3.9 GB physical (`MemTotal: 3871632 kB`), shared with other services;
+  ~2.15 GB was available at Phase 0 measurement (ADR-0004).
+- Idle target: < 100 MB. Crawl peak: < 250 MB. These are the owner-approved caps.
 - After any performance-related change, measure real RSS from systemd or
   `/proc/<pid>/status` and record it in `docs/lessons.md` or the release notes.
 
