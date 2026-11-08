@@ -11,10 +11,12 @@ Format: `- <symptom> → COUNTERMEASURE: <exact rule>`
 
 - 2026-11-08 — Task text alone was treated as a chat opener: model replied
   "Sure! Whenever you're ready" instead of reading files or acting. An
-  imperative one-sentence prompt DID work. → COUNTERMEASURE: every task text
-  must BEGIN with the fixed execution preamble line "You are executing the task
-  below verbatim: select and read the playbook with your file tools, then act
-  autonomously until the 'Done when' criteria hold." and END with "Begin now."
+  imperative one-sentence prompt DID work. → COUNTERMEASURE: every task text must
+  BEGIN by naming ONE concrete first file to read ("One mandatory first action:
+  read docs/playbooks/<name>.md with your file tools now") and END with
+  "Begin now." Vague preambles ("load the playbook") did NOT work reliably;
+  naming the path did. Retries are expected: never assume a silent run means the
+  task ran — verify acceptance criteria outputs yourself.
 - 2026-11-08 — Small model adrift starting in the parent workspace: it answers "I
   have loaded AGENTS.md" while having read the WRONG file (workspace-level, not
   the project's). → COUNTERMEASURE: sessions must start with working directory
