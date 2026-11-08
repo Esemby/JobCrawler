@@ -16,20 +16,19 @@ type Config struct {
 	LogLevel string
 	// LogFormat is one of text, json. Default "text".
 	LogFormat string
-	// DBEngine is the storage engine (ADR-0002). Default "sqlite".
-	DBEngine string
 }
 
 // Load builds Config from defaults and environment overrides.
 // Environment keys used: JOBCRAWLER_BIND_ADDR, JOBCRAWLER_LOG_LEVEL,
-// JOBCRAWLER_LOG_FORMAT, JOBCRAWLER_DB_ENGINE. It errors when any value is
+// JOBCRAWLER_LOG_FORMAT. It errors when any value is
 // invalid so main never starts on a broken configuration.
+// Storage engine + DSN live in the bootstrap file instead (ADR-0002);
+// see LoadBootstrap.
 func Load() (Config, error) {
 	cfg := Config{
 		BindAddr:  getenv("JOBCRAWLER_BIND_ADDR", ":8090"),
 		LogLevel:  getenv("JOBCRAWLER_LOG_LEVEL", "info"),
 		LogFormat: getenv("JOBCRAWLER_LOG_FORMAT", "text"),
-		DBEngine:  getenv("JOBCRAWLER_DB_ENGINE", "sqlite"),
 	}
 	if err := cfg.Validate(); err != nil {
 		return Config{}, err
@@ -54,11 +53,6 @@ func (c Config) Validate() error {
 	case "text", "json":
 	default:
 		return fmt.Errorf("log_format %q: must be one of text, json", c.LogFormat)
-	}
-	switch c.DBEngine {
-	case "sqlite", "mariadb":
-	default:
-		return fmt.Errorf("db_engine %q: must be one of sqlite, mariadb", c.DBEngine)
 	}
 	return nil
 }

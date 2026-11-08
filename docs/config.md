@@ -16,21 +16,26 @@ user asks what a setting does.
 
 ## Bootstrap settings
 
-Environment overrides (Phase 1 implementation; loaded in `internal/config`):
+Loaded in `internal/config`: defaults first, then `config.bootstrap.toml`,
+then environment overrides. The file may be absent on a fresh install
+(sqlite defaults apply); an explicitly configured missing path is an error.
 
 | Env key | Type | Default | Validation | Help |
 |---|---|---|---|---|
 | JOBCRAWLER_BIND_ADDR | string | `:8090` | host:port; port 8080 FORBIDDEN | HTTP bind for the web UI. LAN interface only. Port 8080 is reserved for redirect.py on the Heart. |
 | JOBCRAWLER_LOG_LEVEL | string | `info` | debug, info, warn, error | Log verbosity. |
 | JOBCRAWLER_LOG_FORMAT | string | `text` | text, json | slog output format (stdout only; no chatty disk logs). |
-| JOBCRAWLER_DB_ENGINE | string | `sqlite` | sqlite, mariadb | Which Store implementation to open (ADR-0002). MariaDB not implemented until Phase 6; setting is validated now so config survives the jump. |
+| JOBCRAWLER_CONFIG | string | `config.bootstrap.toml` | file must exist | Path of the bootstrap file; adapter, not a setting in the file itself. |
+| JOBCRAWLER_DB_ENGINE | string | `sqlite` | sqlite, mariadb | Overrides the engine from the bootstrap file (ADR-0002). MariaDB not implemented until Phase 6. |
+| JOBCRAWLER_DB_DSN | string | `jobcrawler.db` (sqlite) | non-empty | Overrides the DSN from the bootstrap file. Never logged, never shown clear. |
 
-Bootstrap-file settings (Phase 2, ADR-0002):
+Bootstrap-file settings (`config.bootstrap.toml`, keys live under `[db]`;
+ADR-0002, loaded in `internal/config`):
 
 | Key | Type | Default | Validation | Help |
 |---|---|---|---|---|
-| bootstrap.settings_path | string | `config.bootstrap.toml` | path exists | Where bootstrap config lives; overridden by env `JOBCRAWLER_CONFIG`. |
-| bootstrap.db.dsn | string | `jobcrawler.db` (sqlite) | non-empty | Connection string for the chosen engine. Passwords go here; never logged, never shown clear. |
+| db.engine | string | `sqlite` | sqlite, mariadb | Which Store implementation to open. |
+| db.dsn | string | `jobcrawler.db` (sqlite) | non-empty; non-empty required for mariadb | Connection string for the chosen engine. Passwords go here; never logged, never shown clear, never committed. |
 
 ## Runtime settings
 

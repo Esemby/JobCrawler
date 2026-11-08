@@ -6,7 +6,7 @@ import (
 )
 
 func TestLoadDefaults(t *testing.T) {
-	for _, key := range []string{"JOBCRAWLER_BIND_ADDR", "JOBCRAWLER_LOG_LEVEL", "JOBCRAWLER_LOG_FORMAT", "JOBCRAWLER_DB_ENGINE"} {
+	for _, key := range []string{"JOBCRAWLER_BIND_ADDR", "JOBCRAWLER_LOG_LEVEL", "JOBCRAWLER_LOG_FORMAT"} {
 		t.Setenv(key, "")
 	}
 	cfg, err := Load()
@@ -21,9 +21,6 @@ func TestLoadDefaults(t *testing.T) {
 	}
 	if cfg.LogFormat != "text" {
 		t.Errorf("LogFormat = %q, want \"text\"", cfg.LogFormat)
-	}
-	if cfg.DBEngine != "sqlite" {
-		t.Errorf("DBEngine = %q, want \"sqlite\"", cfg.DBEngine)
 	}
 }
 
@@ -49,11 +46,10 @@ func TestValidateRejects(t *testing.T) {
 		{"bad addr", func(c *Config) { c.BindAddr = "nonsense" }, "must be host:port"},
 		{"bad level", func(c *Config) { c.LogLevel = "verbose" }, "log_level"},
 		{"bad format", func(c *Config) { c.LogFormat = "yaml" }, "log_format"},
-		{"bad engine", func(c *Config) { c.DBEngine = "postgres" }, "db_engine"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := Config{BindAddr: ":8090", LogLevel: "info", LogFormat: "text", DBEngine: "sqlite"}
+			cfg := Config{BindAddr: ":8090", LogLevel: "info", LogFormat: "text"}
 			tt.mutate(&cfg)
 			err := cfg.Validate()
 			if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
@@ -64,7 +60,7 @@ func TestValidateRejects(t *testing.T) {
 }
 
 func TestValidateAccepts(t *testing.T) {
-	cfg := Config{BindAddr: "192.168.1.10:9090", LogLevel: "warn", LogFormat: "json", DBEngine: "mariadb"}
+	cfg := Config{BindAddr: "192.168.1.10:9090", LogLevel: "warn", LogFormat: "json"}
 	if err := cfg.Validate(); err != nil {
 		t.Errorf("Validate() unexpected error: %v", err)
 	}

@@ -32,9 +32,18 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("config: %w", err)
 	}
+	bootstrapPath := os.Getenv("JOBCRAWLER_CONFIG")
+	if bootstrapPath == "" {
+		bootstrapPath = config.DefaultBootstrapPath
+	}
+	bootstrap, err := config.LoadBootstrap(bootstrapPath)
+	if err != nil {
+		return fmt.Errorf("bootstrap config: %w", err)
+	}
+
 	logger := newLogger(cfg)
 	slog.SetDefault(logger)
-	logger.Info("starting jobcrawler", "version", version.String(), "bind", cfg.BindAddr)
+	logger.Info("starting jobcrawler", "version", version.String(), "bind", cfg.BindAddr, "engine", bootstrap.Engine)
 
 	srv, err := web.New(web.StatusPage{
 		Version:   version.Version,
@@ -42,7 +51,7 @@ func run() error {
 		Date:      version.Date,
 		GoVersion: runtime.Version(),
 		BindAddr:  cfg.BindAddr,
-		DBEngine:  cfg.DBEngine,
+		DBEngine:  bootstrap.Engine,
 	})
 	if err != nil {
 		return fmt.Errorf("web: %w", err)
