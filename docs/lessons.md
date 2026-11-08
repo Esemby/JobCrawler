@@ -20,3 +20,6 @@ Rules: one lesson = one insight + one rule. If a lesson needs context, link the 
 - 2026-11-08 — Pre-decided facts live in ADRs, not in commit messages or heads.
   Rule: cite the ADR number (e.g., "per ADR-0002") instead of re-arguing in code
   review.
+
+- 2026-11-08 — Handover test #0: the session loop was exercised end to end with a
+  docs-only task. Rule: docs-only commits still follow the full loop, including handoff.md update.

@@ -7,7 +7,7 @@ No history here. Newest state only.
 
 - Date: 2026-11-08
 - Model: GLM-5.3-Flash Free (cloud bootstrap agent)
-- Commit: 5b48427 pushed to origin/main (see `git log --oneline -4`)
+- Commit: e6dd7c6 pushed to origin/main (see `git log --oneline -4`)
 
 ## Project state
 
