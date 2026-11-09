@@ -31,6 +31,16 @@ type Source struct {
 	Enabled  bool
 }
 
+// Verdict is the stage-1 filter result stored per fingerprint
+// (docs/glossary.md: Verdict, Reason). Reasons is the human-readable chain;
+// it is stored newline-joined and split on read.
+type Verdict struct {
+	Fingerprint string
+	Result      string // accepted | rejected
+	Reasons     []string
+	EvaluatedAt string
+}
+
 // Fingerprint builds the stable dedupe key: normalized company + title +
 // location + canonical URL (docs/sources.md politeness contract). Changing
 // the formula requires migrate-everything; treat it as frozen.
