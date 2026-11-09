@@ -20,8 +20,8 @@ forbid automated access.
 
 | Source | Method | Access notes / ToS | Status |
 |---|---|---|---|
-| Greenhouse | Public JSON endpoint `boards-api.greenhouse.io` | Public, unauthenticated board JSON; verify ToS before implementing (ADR-0004: first source) | planned (Phase 3) |
-| Lever | Public JSON postings API | Public, unauthenticated; same ToS check rule | planned, after Greenhouse |
+| Greenhouse | Public JSON `GET boards-api.greenhouse.io/v1/boards/{token}/jobs` | Official docs (developers.greenhouse.io/job-board.html): "Job Board data is publicly available, authentication is not required for any GET endpoints." Our `?content=true` adds description. robots.txt of boards(host)/boards-api: only `/embed/` Disallowed — our path is permitted. Poll ≥ 1 h per board (there is no pagination). Fixture: `testdata/greenhouse/board-propublica.json`. | approved for Phase 3 (ADR-0004) |
+| Lever | Public JSON postings API | Public, unauthenticated; same ToS check rule before implementing | planned, after Greenhouse |
 
 ## Politeness contract (every source, no exceptions)
 

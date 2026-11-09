@@ -3,13 +3,26 @@
 *When to read this:* when you stumble, and at the end of every session you stumbled
 (or when you discover a NEW pitfall).
 *Result you should have:* one entry appended, with a concrete counter-instruction.
-Entries are grouped by pattern; newest first in each group. Keep each <= 3 lines.
+Entries are grouped by pattern; newest FIRST overall (newer entries at the top of
+"## Entries"). Keep each <= 3 lines. NEVER edit an existing entry's text; append
+new entries only.
 
 Format: `- <symptom> → COUNTERMEASURE: <exact rule>`
 
 ## Entries
 
-- 2026-11-08 — Task text alone was treated as a chat opener: model replied
+- 2026-11-09 — OpenCode-native `ollama` provider + `general` agent: the model
+  emits tool-call hand-rails ("We have tools... Use opencode." + raw JSON args)
+  as TEXT instead of tool calls — 1/7 useful. Root evidence: session DB shows
+  tool parts exist but later turns degrade to args-as-text.
+  → COUNTERMEASURE: for agent-class local sessions declare the model explicitly
+  under a custom provider with the `openai-compatible` package and
+  "capabilities": {"toolCall": true} (config `ollamalocal` added 2026-11-09);
+  tool binding improved immediately. Residual gpt-oss instability (empty replies,
+  off-task answers, "CANNOT READ FILE" bailouts) is MODEL behavior at this
+  context size, not wiring — do not lower graduation criteria; prefer
+  `explore`-agent runs (3/3) for read-based training until write-runs stabilize.
+- 2026-11-08 — Structured task briefs were treated as chat openers: model replied
   "Sure! Whenever you're ready" instead of reading files or acting. An
   imperative one-sentence prompt DID work. → COUNTERMEASURE: every task text must
   BEGIN by naming ONE concrete first file to read ("One mandatory first action:

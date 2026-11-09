@@ -17,6 +17,10 @@ that prevents recurrence. Newest LAST. Never delete or edit old lines.
   relative path silently landed nowhere (the old-path content persisted), and a
   later build failed on stale symbols. Rule: after any directory change, write
   with absolute paths, or read back the file before compiling against it.
+- 2026-11-09 — Twice today, an "append a block above X" edit used an existing
+  entry's first line as the anchor and clobbered the rest of that entry.
+  Rule: in append-only logs, anchor on the file's final line or the exact
+  complete text of the anchor block, and re-read the file after every edit.
 
 Rules: one lesson = one insight + one rule. If a lesson needs context, link the file.
 
