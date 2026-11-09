@@ -3,10 +3,13 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"io/fs"
 	"path/filepath"
 	"testing"
 
 	"github.com/Esemby/JobCrawler/internal/store"
+	"github.com/Esemby/JobCrawler/internal/store/migrations"
 	"github.com/Esemby/JobCrawler/internal/store/storetest"
 )
 
@@ -41,6 +44,25 @@ func openRaw(t *testing.T) (*sql.DB, string) {
 	return db, file
 }
 
+// maxMigratedVersion reads the highest embedded migration number for the
+// engine so the expected schema version is never hard-coded (adding 0003+
+// must not break this test).
+func maxMigratedVersion(t *testing.T, engine string) int {
+	t.Helper()
+	highest := 0
+	entries, err := fs.ReadDir(migrations.FS, ".")
+	if err != nil {
+		t.Fatalf("read embedded migrations: %v", err)
+	}
+	for _, e := range entries {
+		var v int
+		if n, _ := fmt.Sscanf(e.Name(), "%04d", &v); n == 1 && v > highest {
+			highest = v
+		}
+	}
+	return highest
+}
+
 func TestMigrateIsIdempotent(t *testing.T) {
 	ctx := context.Background()
 	db, _ := openRaw(t)
@@ -57,8 +79,12 @@ func TestMigrateIsIdempotent(t *testing.T) {
 	if err := db.QueryRowContext(ctx, q).Scan(&version); err != nil {
 		t.Fatalf("read schema_migrations: %v", err)
 	}
-	if version != 1 {
-		t.Errorf("schema version = %d, want 1 after migration 0001", version)
+	if version < 1 {
+		t.Errorf("schema version = %d, want >= 1 after migrations", version)
+	}
+	if want := maxMigratedVersion(t, "sqlite"); version != want {
+		t.Errorf("schema version = %d, want %d (embedded migrations are authoritative)",
+			version, want)
 	}
 
 	// The skeleton tables exist and are writable.

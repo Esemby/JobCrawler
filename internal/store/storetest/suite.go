@@ -8,8 +8,9 @@ import (
 	"github.com/Esemby/JobCrawler/internal/store"
 )
 
-// Run executes the settings-CRUD contract suite. open must return a fresh,
+// Run executes the persistence contract suite. open must return a fresh,
 // migrated store on an isolated database; the suite closes each instance.
+// Settings tests come from suite.go; jobs from suite_jobs.go.
 func Run(t *testing.T, open func(t *testing.T) store.Store) {
 	t.Helper()
 	cases := []struct {
@@ -32,6 +33,7 @@ func Run(t *testing.T, open func(t *testing.T) store.Store) {
 			tc.run(t, s)
 		})
 	}
+	runJobs(t, open)
 }
 
 func runGetMissingIsNotFound(t *testing.T, s store.Store) {

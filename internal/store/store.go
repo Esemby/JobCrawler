@@ -26,4 +26,27 @@ type Store interface {
 	// Close releases the database handle. It is idempotent and only called
 	// at process shutdown.
 	Close() error
+
+	// --- sources (Phases 3+) -----------------------------------------------
+	// AddSource registers one configured crawler input and returns its id.
+	// Duplicate names error. See docs/sources.md for the politeness contract.
+	AddSource(ctx context.Context, name, kind, endpoint string) (int64, error)
+
+	// ListSources returns every configured crawler input, sorted by name.
+	ListSources(ctx context.Context) ([]Source, error)
+
+	// SetSourceEnabled flips one source by name; unknown names error.
+	SetSourceEnabled(ctx context.Context, name string, enabled bool) error
+
+	// --- jobs ---------------------------------------------------------------
+	// UpsertJobs stores jobs by fingerprint and returns how many were new.
+	UpsertJobs(ctx context.Context, jobs []Job) (int, error)
+
+	// ListJobs returns stored jobs, newest last_seen first. state filters
+	// ('active', 'disappeared'); pass "*" for everything.
+	ListJobs(ctx context.Context, state string) ([]Job, error)
+
+	// MarkJobState moves one fingerprint's state; 'active'/'disappeared'
+	// only; anything else errors.
+	MarkJobState(ctx context.Context, fingerprint, state string) error
 }
