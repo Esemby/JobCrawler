@@ -24,6 +24,9 @@ func runJobs(t *testing.T, open func(t *testing.T) store.Store) {
 		{"list filters by state", listFiltersByState},
 		{"mark state rejects junk", markStateRejectsJunk},
 		{"empty title rejected", emptyTitleRejected},
+		{"save and list verdicts", saveAndListVerdicts},
+		{"verdict upsert overwrites", verdictUpsertOverwrites},
+		{"verdict junk result rejected", verdictJunkResultRejected},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -154,5 +157,58 @@ func emptyTitleRejected(t *testing.T, s store.Store) {
 	_, err := s.UpsertJobs(ctx, []store.Job{{URL: "https://x.test/x"}})
 	if err == nil {
 		t.Errorf("empty title accepted")
+	}
+}
+
+func saveAndListVerdicts(t *testing.T, s store.Store) {
+	ctx := context.Background()
+	vs := map[string]store.Verdict{
+		"fp-acc": {Result: store.Accepted,
+			Reasons: []string{"passed stage 1 (no rule fired)"}},
+		"fp-rej": {Result: store.Rejected,
+			Reasons: []string{"no-go match: unpaid", "must-have not met: senior"}},
+	}
+	if err := s.SaveVerdicts(ctx, vs); err != nil {
+		t.Fatalf("SaveVerdicts: %v", err)
+	}
+	got, err := s.ListVerdicts(ctx)
+	if err != nil {
+		t.Fatalf("ListVerdicts: %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("verdicts = %d, want 2", len(got))
+	}
+	rej := got["fp-rej"]
+	if rej.Result != store.Rejected || len(rej.Reasons) != 2 ||
+		rej.Reasons[1] != "must-have not met: senior" {
+		t.Errorf("roundtrip lost reason lines: %+v", rej)
+	}
+	if rej.EvaluatedAt == "" {
+		t.Errorf("evaluated_at missing")
+	}
+}
+
+func verdictUpsertOverwrites(t *testing.T, s store.Store) {
+	ctx := context.Background()
+	if err := s.SaveVerdicts(ctx, map[string]store.Verdict{
+		"fp": {Result: store.Rejected, Reasons: []string{"old"}}}); err != nil {
+		t.Fatalf("first SaveVerdicts: %v", err)
+	}
+	if err := s.SaveVerdicts(ctx, map[string]store.Verdict{
+		"fp": {Result: store.Accepted, Reasons: []string{"new"}}}); err != nil {
+		t.Fatalf("second SaveVerdicts: %v", err)
+	}
+	got, _ := s.ListVerdicts(ctx)
+	if got["fp"].Result != store.Accepted || got["fp"].Reasons[0] != "new" {
+		t.Errorf("upsert did not overwrite: %+v", got["fp"])
+	}
+}
+
+func verdictJunkResultRejected(t *testing.T, s store.Store) {
+	ctx := context.Background()
+	err := s.SaveVerdicts(ctx, map[string]store.Verdict{
+		"fp": {Result: "weird"}})
+	if err == nil {
+		t.Errorf("junk result accepted by store")
 	}
 }

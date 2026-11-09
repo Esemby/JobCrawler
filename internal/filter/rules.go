@@ -6,11 +6,12 @@ import (
 	"github.com/Esemby/JobCrawler/internal/store"
 )
 
-// Result is the outcome of stage 1 for one job. Values are stored verbatim
-// in the job_verdicts table (see migration 0003 CHECK constraint).
+// Result values mirror store.Accepted / store.Rejected (the strings are
+// also CHECKed by migration 0003); aliases live here so filter code reads
+// naturally without an import cycle.
 const (
-	Accepted = "accepted"
-	Rejected = "rejected"
+	Accepted = store.Accepted
+	Rejected = store.Rejected
 )
 
 // Config is one evaluated rule set. Every field is a lowercase keyword

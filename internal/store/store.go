@@ -49,4 +49,12 @@ type Store interface {
 	// MarkJobState moves one fingerprint's state; 'active'/'disappeared'
 	// only; anything else errors.
 	MarkJobState(ctx context.Context, fingerprint, state string) error
+
+	// --- verdicts (Phase 4) --------------------------------------------------
+	// SaveVerdicts upserts stage-1 results by fingerprint. Result must be
+	// 'accepted' or 'rejected'.
+	SaveVerdicts(ctx context.Context, verdicts map[string]Verdict) error
+
+	// ListVerdicts returns every stored verdict keyed by fingerprint.
+	ListVerdicts(ctx context.Context) (map[string]Verdict, error)
 }

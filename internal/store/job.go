@@ -31,6 +31,13 @@ type Source struct {
 	Enabled  bool
 }
 
+// Result values for store.Verdict (uptime constraint: migration 0003 CHECKs
+// these exact strings).
+const (
+	Accepted = "accepted"
+	Rejected = "rejected"
+)
+
 // Verdict is the stage-1 filter result stored per fingerprint
 // (docs/glossary.md: Verdict, Reason). Reasons is the human-readable chain;
 // it is stored newline-joined and split on read.
