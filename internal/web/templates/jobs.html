@@ -1,0 +1,94 @@
+{{define "jobs"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>jobcrawler — jobs</title>
+  <script src="/static/htmx.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; color: #222; max-width: 70rem; }
+    table { border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 0.4rem 0.6rem; text-align: left; }
+    th { background: #f4f4f4; }
+    h1, h2 { font-size: 1.3rem; }
+    .muted { color: #777; }
+    .flash { background: #eef7ee; border: 1px solid #9c9; padding: 0.4rem 0.8rem; margin: 1rem 0; }
+    .badge { background: #eef; border: 1px solid #99c; padding: 0 0.4rem; }
+    .badge.off { background: #fff3cd; border-color: #cc9; }
+    form.inline { display: inline; }
+    form.stack { margin: 0.5rem 0; }
+  </style>
+</head>
+<body>
+  <h1>Jobs</h1>
+  <p class="muted">LAN-only service. Never proxy this to the internet.</p>
+  <p><a href="/">Status</a> · <a href="/jobs">Jobs</a> · <a href="/system">System</a> · <a href="/database">Database</a></p>
+
+  {{if .Flash}}<p class="flash">{{.Flash}}</p>{{end}}
+
+  <h2>Stored jobs</h2>
+  <form action="/crawl/run" method="post" class="stack">
+    <button type="submit">Run crawl now</button>
+    <span class="muted">crawls every enabled source below, politely (rate-limited)</span>
+  </form>
+  {{if .Jobs}}
+  <table>
+    <tr><th>Title</th><th>Company</th><th>Location</th><th>Source</th><th>State</th><th>First seen</th><th>Last seen</th></tr>
+    {{range .Jobs}}
+    <tr>
+      <td><a href="{{.Link}}">{{.Title}}</a></td>
+      <td>{{.Company}}</td>
+      <td>{{.Location}}</td>
+      <td>{{.Source}}</td>
+      <td><span class="badge{{if eq .State "disappeared"}} off{{end}}">{{.State}}</span></td>
+      <td>{{.FirstSeen}}</td>
+      <td>{{.LastSeen}}</td>
+    </tr>
+    {{end}}
+  </table>
+  {{else}}
+  <p class="muted">No jobs stored yet. Add a source below and press “Run crawl now”.</p>
+  {{end}}
+
+  <h2>Sources</h2>
+  {{if .Sources}}
+  <table>
+    <tr><th>Name</th><th>Kind</th><th>Board token</th><th>Enabled</th></tr>
+    {{range .Sources}}
+    <tr>
+      <td><code class="key">{{.Name}}</code></td>
+      <td>{{.Kind}}</td>
+      <td>{{.Endpoint}}</td>
+      <td>
+        <form action="/sources/toggle" method="post" class="inline">
+          <input type="hidden" name="name" value="{{.Name}}">
+          {{if .Enabled}}
+          <input type="hidden" name="enabled" value="off">
+          <button type="submit">Disable</button>
+          {{else}}
+          <input type="hidden" name="enabled" value="on">
+          <button type="submit">Enable</button>
+          {{end}}
+        </form>
+        {{if .Enabled}}<span class="badge">enabled</span>{{else}}<span class="badge off">disabled</span>{{end}}
+      </td>
+    </tr>
+    {{end}}
+  </table>
+  {{else}}
+  <p class="muted">No sources configured yet.</p>
+  {{end}}
+
+  <form action="/sources/add" method="post" class="stack">
+    <h2>Add a Greenhouse source</h2>
+    <p class="muted">Board token is the part of the board URL, e.g. <code>propublica</code>
+    in <code>job-boards.greenhouse.io/propublica</code>. Only public boards permitted by
+    robots.txt are crawled (docs/sources.md).</p>
+    <label>Source name (short, lowercase, dashes): <input type="text" name="name" required></label>
+    <label>Board token: <input type="text" name="token" required></label>
+    <button type="submit">Add source</button>
+  </form>
+</body>
+</html>
+{{end}}

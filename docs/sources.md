@@ -20,7 +20,7 @@ forbid automated access.
 
 | Source | Method | Access notes / ToS | Status |
 |---|---|---|---|
-| Greenhouse | Public JSON `GET boards-api.greenhouse.io/v1/boards/{token}/jobs` | Official docs (developers.greenhouse.io/job-board.html): "Job Board data is publicly available, authentication is not required for any GET endpoints." Our `?content=true` adds description. robots.txt of boards(host)/boards-api: only `/embed/` Disallowed — our path is permitted. Poll ≥ 1 h per board (there is no pagination). Fixture: `testdata/greenhouse/board-propublica.json`. | approved for Phase 3 (ADR-0004) |
+| Greenhouse | Public JSON `GET boards-api.greenhouse.io/v1/boards/{token}/jobs` | Official docs (developers.greenhouse.io/job-board.html): "Job Board data is publicly available, authentication is not required for any GET endpoints." Our `?content=true` adds description. robots.txt of boards(host)/boards-api: only `/embed/` Disallowed — our path is permitted. Poll ≥ 1 h per board (there is no pagination). Fixture: `testdata/greenhouse/board-propublica.json`. | crawled live 2026-11-09 (propublica, 4 jobs, dedupe verified on 2nd run) |
 | Lever | Public JSON postings API | Public, unauthenticated; same ToS check rule before implementing | planned, after Greenhouse |
 
 ## Politeness contract (every source, no exceptions)
@@ -34,3 +34,17 @@ forbid automated access.
 After adding a working source, add a row above and commit together with the adapter.
 If a source's terms forbid automated access, write the row with status `rejected` and
 the reason — a documented "no" prevents repeated relitigating.
+
+## Phase 3 implementation notes
+
+- robots.txt: subset parser in `internal/crawler/robots.go` (type `robotRules`
+  documents the exact semantics it implements: group selection by exact
+  agent-token match with "*" fallback, longest-prefix Allow/Disallowed, tie
+  favours Allow). Pinned by fixture tests; a live check pins the Greenhouse
+  decision.
+- Politeness: ≥ 2 s + ≤ 1 s jitter between requests to the same host, robots
+  re-read at most daily, robots probe errors refuse the round (conservative).
+- UA: build-time constant (`crawler.DefaultUA`) — the placeholder contact
+  must be replaced before the next real crawl (config.md row).
+- To do with later phases: conditional GET (ETag/If-Modified-Since), error
+  back-off, crawl.user_agent as a runtime setting, a scheduler.

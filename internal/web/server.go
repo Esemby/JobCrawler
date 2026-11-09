@@ -65,6 +65,10 @@ func New(status StatusPage, deps Deps) (*Server, error) {
 	s.mux.Handle("GET /database", s.databaseHandler())
 	s.mux.Handle("POST /database/save", s.saveDatabaseHandler())
 	s.mux.Handle("POST /database/test", s.testDatabaseHandler())
+	s.mux.Handle("GET /jobs", s.jobsHandler())
+	s.mux.Handle("POST /crawl/run", s.crawlRunHandler())
+	s.mux.Handle("POST /sources/add", s.addSourceHandler())
+	s.mux.Handle("POST /sources/toggle", s.toggleSourceHandler())
 
 	return s, nil
 }

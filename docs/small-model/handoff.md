@@ -5,43 +5,62 @@ No history here. Newest state only.
 
 ## Session
 
-- Date: 2026-11-09 (overnight block, closed ~11:35)
-- Model: GLM-5.3-Flash Free (cloud bootstrap agent) + background Phase-2 agent
-- Commit: 0fd07c9 pushed to origin/main; `git status` clean
+- Date: 2026-11-09 (day block, second half)
+- Model: GLM-5.3-Flash Free (cloud builder agent)
+- HEAD: ff816f5 + web commit (see git log); `git status` should be clean after
+  the docs commit this session ends with. `make check` green.
 
 ## Project state
 
-- Phase 1 done, pushed. Phase 2 done, pushed: Store interface + embedded
-  migration 0001 (settings, job_sources, jobs, users, user_flags skeleton per
-  ADR-0004), SQLite engine (WAL, modernc.org/sqlite, no CGO), bootstrap TOML
-  with env precedence, settings CRUD, System + Database pages (validation,
-  hot-reload hook, masked DSN, sqlite test-connection), wired in main.
-- Training loop: handover #0 passed (2nd attempt), #1 passed partially via
-  explore-agent reads; write-tasks through `general` blocked by ollama provider
-  tool-dispatch failures — evidence in docs/small-model/scorecard.md and
-  known-pitfalls.md. gpt-oss:20b IS now pulled into local ollama (was missing).
-- Apply the morning-review rules after reading the docs above.
+- Phases 0-2 done and pushed (skeleton, store, settings config UI).
+- Phase 3 DONE and pushed in this block, commit by commit:
+  1. Greenhouse ToS verdict recorded in docs/sources.md (official docs say the
+     job-board GET endpoints are public and unauthenticated; robots.txt of
+     boards-api.greenhouse.io disallows only /embed/, our path is permitted).
+     Real 4-job fixture saved: testdata/greenhouse/board-propublica.json.
+  2. internal/sources/greenhouse: parser + endpoint builder + ToJobs mapper,
+     fixture-backed tests incl. junk rejection and invalid tokens.
+  3. internal/store: Job + Source domain types, Fingerprint (normalization +
+     canonical URL), sqlite jobs/sources CRUD, migration 0002 (lifecycle
+     columns), storetest contract suite extended (16 cases).
+  4. internal/crawler: robots.txt subset parser (RFC 9309 semantics, pinned by
+     15 fixture cases), polite fetcher (per-host ≥2s + ≤1s jitter, robots
+     cached ≤24h, robots-unreachable => refuse round, honest UA), and
+     CrawlSource orchestration tested end-to-end over httptest.
+  5. Web: /jobs page (job table + source table + add/toggle forms +
+     "Run crawl now"), POST /crawl/run, POST /sources/add, POST /sources/
+     toggle; nav links on all pages; handlers fail loudly without store.
+  6. SMOKE TEST against the real world PASSED: ran the binary, added source
+     greenhouse-demo/propublica via the UI loop, POST /crawl/run stored 4
+     real ProPublica jobs, second run reported "0 new" (dedupe works).
+- Training loop: OpenCode provider investigation finished (owner decision
+  3.1). Findings: the built-in `ollama` provider mis-binds gpt-oss tool calls
+  (args emitted as text, 1/7 useful). Added `ollamalocal` provider (custom
+  package @opencode/ai/providers/openai-compatible, baseURL 127.0.0.1:11434,
+  toolCall capability declared) — tool BINDING fixed; residual failures are
+  model quality (empty replies, hallucinated context). explore-agent read
+  tasks remain 3/3. Evidence: docs/small-model/known-pitfalls.md, scorecard.
+
+## Blockers / owner input needed (only ONE)
+
+1. UA contact email: the first real crawl has now HAPPENED (2026-11-09), so
+   per owner decision 2.2 the placeholder in crawler.DefaultUA must be
+   replaced with a real contact BEFORE any further/scheduled real crawl.
+   Until the owner supplies the address: do not run real crawls; tests all
+   use fakes, so nothing is blocked in code.
 
 ## Next task (ONE)
 
-Phase 3 — first real crawl (Greenhouse public JSON, per docs/sources.md
-register + docs/playbooks/add-a-source.md). Needs the owner for: ToS sign-off
-for using boards.greenhouse.io public JSON at crawl volume, and a UA contact
-email for `crawl.user_agent`. Before code: save a real non-secret fixture of a
-Greenhouse board into testdata/greenhouse/.
+Phase 4 — filter engine (docs/original-brief.md section 4 via
+docs/playbooks/add-a-filter-rule.md): tags, blacklist terms, must-haves and
+no-gos per job, scoring with "why" explanations persisted as rows, jobs page
+sprouting a per-job verdict display. Start by reading docs/glossary.md
+(fingerprint, verdict) and docs/architecture.md seams (filter is inward;
+web -> everything is allowed).
 
-## Blockers / questions for the owner
+## Invariants to keep
 
-1. Greenhouse ToS check + polite volume: confirm allowed request rate.
-2. Contact email for User-Agent (politeness contract requires it).
-3. opencode↔ollama provider tool-dispatch — decide whether to debug locally or
-   run small-model tests from another runner.
-
-## Verify commands
-
-```
-git log --oneline -8 ; git status --short   # expect clean
-make check                                   # expect green
-./bin/jobcrawler & curl -s http://127.0.0.1:8090/healthz   # "ok dev"
-curl -s http://127.0.0.1:8090/system         # settings table
-```
+- `make check` before every commit; Conventional Commits; never force-push.
+- Port 8090 default, never 8080; UI stays LAN-only (rule 6).
+- robots subset parser stays stdlib-only (any dependency needs an ADR first).
+- Every instruction file < 150 lines target (hard cap 250).

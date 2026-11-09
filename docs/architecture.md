@@ -26,7 +26,7 @@ testdata/              saved HTML/JSON fixtures per source
 Only three interfaces cross packages. Do not add more without an ADR.
 
 ```go
-type Store interface { /* settings CRUD since Phase 2; jobs/sources/verdicts arrive with Phases 3-4 */ }
+type Store interface { /* settings CRUD since Phase 2; jobs + sources since Phase 3; verdicts arrive with Phase 4 */ }
 type Source interface { // one method set: fetch listings -> []Job
     Name() string
     Fetch(ctx context.Context) ([]Job, error)

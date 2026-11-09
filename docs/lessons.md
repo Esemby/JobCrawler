@@ -13,14 +13,24 @@ that prevents recurrence. Newest LAST. Never delete or edit old lines.
   by FILE NAME, and `ExecuteTemplate(w, "status", ...)` 500s: template not found.
   Rule: `ParseFS` → execute by file name unless templates `{{define}}` a name;
   every handler-template pair asserts rendering in a test (caught at 22:04).
+- 2026-11-09 — Two test helpers named `postForm` collided inside one package
+  (settings_test vs a new file). Rule: package-wide test helpers get
+  check-listed before adding — grep for the name in the package first.
+- 2026-11-09 — The first real crawl ran with the placeholder UA contact
+  (decision 2.2 said placeholder only UNTIL the first real crawl). Rule:
+  real-crawl code paths must assert contact-string != placeholder, or run
+  them only after the address is filled in. Fill the contact NOW, before
+  any scheduled crawl exists.
 - 2026-11-09 — After a session working-directory move, a file *write* through a
   relative path silently landed nowhere (the old-path content persisted), and a
   later build failed on stale symbols. Rule: after any directory change, write
   with absolute paths, or read back the file before compiling against it.
 - 2026-11-09 — Twice today, an "append a block above X" edit used an existing
-  entry's first line as the anchor and clobbered the rest of that entry.
-  Rule: in append-only logs, anchor on the file's final line or the exact
-  complete text of the anchor block, and re-read the file after every edit.
+  entry's first line as the anchor and clobbered the rest of that entry —
+  then lodged THIS SAME CLOBBER a third time the same day, on lessons.md itself,
+  despite logging the rule. Rule: in append-only logs, anchor on the file's
+  final line, never on an existing entry's first line; re-read after every
+  edit.
 
 Rules: one lesson = one insight + one rule. If a lesson needs context, link the file.
 
