@@ -42,11 +42,11 @@ ADR-0002, loaded in `internal/config`):
 | Key | Type | Default | Validation | Help |
 |---|---|---|---|---|
 | system.bind_addr | string | `:8090` | valid host:port | HTTP bind for the web UI. LAN interface only. Port 8080 is FORBIDDEN (redirect.py lives there). |
-| system.log_level | string | `info` | debug, info, warn, error | Log verbosity. |
-| system.log_format | string | `text` | text, json | slog output format. |
-| crawl.concurrency | int | `2` | 1-8 | Parallel fetches. Keep low on the Pi. |
-| crawl.rate_per_host_ms | int | `2000` | ≥ 250ms | Min delay between requests to one host, plus jitter. |
-| crawl.user_agent | string | jobcrawler (+contact) | must contain "/" | UA string; include a contact email per politeness. |
+| system.log_level | string | `info` | debug, info, warn, error | Apapplies live via the web SavedHook (no restart). |
+| system.log_format | string | `text` | text, json | slog output format. Restart required. |
+| crawl.concurrency | int | `2` | 1-8 | Parallel fetches. Placeholder until the crawler lands (Phase 4). Applies live. |
+| crawl.rate_per_host_ms | int | `2000` | ≥ 250ms | Min delay between requests to one host, plus jitter. NOT IMPLEMENTED YET (Phase 3). |
+| crawl.user_agent | string | jobcrawler (+contact) | must contain "/" | UA string; include a contact email per politeness. NOT IMPLEMENTED YET (Phase 3). |
 | sources.* | list | - | per-source | One entry per configured source; see `sources.md`. |
 | filters.* | lists | empty | see filter playbook | Blacklist, no-gos, must-haves, tags, location rules. |
 | review.enabled | bool | `false` | - | Stage 3 gate. System must work fully with this off. |

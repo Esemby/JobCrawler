@@ -1,0 +1,57 @@
+{{define "system"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>jobcrawler — system settings</title>
+  <script src="/static/htmx.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; color: #222; max-width: 60rem; }
+    table { border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 0.4rem 0.6rem; text-align: left; }
+    th { background: #f4f4f4; }
+    h1 { font-size: 1.3rem; }
+    .muted { color: #777; }
+    .flash { background: #eef7ee; border: 1px solid #9c9; padding: 0.4rem 0.8rem; margin: 1rem 0; }
+    code.key { font-weight: bold; }
+    .badge { background: #fff3cd; border: 1px solid #cc9; padding: 0 0.4rem; }
+  </style>
+</head>
+<body>
+  <h1>System settings</h1>
+  <p class="muted">LAN-only service. Never proxy this to the internet.</p>
+  <p><a href="/">Status</a> · <a href="/system">System</a> · <a href="/database">Database</a></p>
+
+  {{if .Flash}}<p class="flash">{{.Flash}}</p>{{end}}
+
+  <table>
+    <tr><th>Key</th><th>Type</th><th>Value</th><th>Set</th><th>Help</th></tr>
+    {{range .Rows}}
+    <tr>
+      <td><code class="key">{{.Key}}</code></td>
+      <td>{{.Type}}</td>
+      <td>
+        <form action="/system/save" method="post" style="display:inline">
+          <input type="hidden" name="key" value="{{.Key}}">
+          <input type="text" name="value" value="{{.Value}}" size="28">
+        </form>
+      </td>
+      <td>
+        {{if .Override}}<span class="badge">override</span>{{else}}default{{end}}
+        {{if .Restart}}<span class="badge">restart required</span>{{end}}
+        <form action="/system/save" method="post" style="display:inline">
+          <input type="hidden" name="key" value="{{.Key}}">
+          <input type="hidden" name="value" value="{{.Value}}">
+          <button type="submit">Save</button>
+        </form>
+      </td>
+      <td>{{.Help}}{{if ne .Value .Default}}<br><span class="muted">default: {{.Default}}</span>{{end}}</td>
+    </tr>
+    {{end}}
+  </table>
+
+  <p class="muted">Changes marked "restart required" only apply after restarting the service; all others apply immediately.</p>
+</body>
+</html>
+{{end}}

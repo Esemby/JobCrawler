@@ -20,7 +20,8 @@ var embedded embed.FS
 
 // Server holds the routed HTTP handler. Create with New, serve via Handler().
 type Server struct {
-	mux *http.ServeMux
+	mux  *http.ServeMux
+	deps Deps
 }
 
 // StatusPage is the data shown on the landing/status page. Fields are filled
@@ -36,8 +37,10 @@ type StatusPage struct {
 
 // New builds the routed handler. Port binding happens in cmd/main, never here,
 // so tests can exercise the routes with httptest without listening.
-func New(status StatusPage) (*Server, error) {
-	s := &Server{mux: http.NewServeMux()}
+// deps carries the Phase 2 runtime pieces (docs/architecture.md: the web layer
+// may reach inward); Zero Deps is valid for pages that need no store.
+func New(status StatusPage, deps Deps) (*Server, error) {
+	s := &Server{mux: http.NewServeMux(), deps: deps}
 
 	st, err := newStatusHandler(status)
 	if err != nil {
@@ -56,6 +59,12 @@ func New(status StatusPage) (*Server, error) {
 		return nil, fmt.Errorf("embed static: %w", err)
 	}
 	s.mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(staticFS)))
+
+	s.mux.Handle("GET /system", s.systemHandler())
+	s.mux.Handle("POST /system/save", s.saveSettingHandler())
+	s.mux.Handle("GET /database", s.databaseHandler())
+	s.mux.Handle("POST /database/save", s.saveDatabaseHandler())
+	s.mux.Handle("POST /database/test", s.testDatabaseHandler())
 
 	return s, nil
 }

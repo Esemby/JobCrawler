@@ -1,0 +1,55 @@
+{{define "database"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>jobcrawler — database access</title>
+  <script src="/static/htmx.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; color: #222; max-width: 60rem; }
+    table { border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 0.4rem 0.6rem; text-align: left; }
+    th { background: #f4f4f4; }
+    h1 { font-size: 1.3rem; }
+    .muted { color: #777; }
+    .flash { border: 1px solid #9c9; padding: 0.4rem 0.8rem; margin: 1rem 0; }
+    input[type=text], select { padding: 0.2rem 0.4rem; }
+  </style>
+</head>
+<body>
+  <h1>Database access</h1>
+  <p class="muted">LAN-only service. Never proxy this to the internet.</p>
+  <p><a href="/">Status</a> · <a href="/system">System</a> · <a href="/database">Database</a></p>
+
+  {{if .Flash}}<p class="flash">{{.Flash}}</p>{{end}}
+
+  <p>Engine and connection live in <strong>{{.BootstrapPath}}</strong> because they cannot be stored inside the database they describe (ADR-0002). The running process keeps using its current connection until restart.</p>
+
+  <form action="/database/save" method="post">
+    <table>
+      <tr><th>Setting</th><th>Value</th></tr>
+      <tr>
+        <th>Engine</th>
+        <td>
+          <select name="engine">
+            <option value="sqlite" {{if eq .Engine "sqlite"}}selected{{end}}>sqlite</option>
+            <option value="mariadb" {{if eq .Engine "mariadb"}}selected{{end}}>mariadb (not until Phase 6)</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <th>Connection string (DSN)</th>
+        <td><input type="text" name="dsn" value="" placeholder="{{.DSNMasked}}" size="44"></td>
+      </tr>
+    </table>
+    <p>
+      <button type="submit" name="action" value="test" formaction="/database/test">Test connection</button>
+      <button type="submit">Save bootstrap file</button>
+    </p>
+  </form>
+
+  <p class="muted">The stored DSN is never shown in clear text: for engines with a password, the display above masks it. Leaving the field empty and saving is rejected rather than guessing "unchanged".</p>
+</body>
+</html>
+{{end}}

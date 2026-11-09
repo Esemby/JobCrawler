@@ -8,7 +8,7 @@ import (
 )
 
 func TestHealthz(t *testing.T) {
-	srv, err := New(StatusPage{})
+	srv, err := New(StatusPage{}, Deps{})
 	if err != nil {
 		t.Fatalf("New(): %v", err)
 	}
@@ -26,7 +26,7 @@ func TestHealthz(t *testing.T) {
 }
 
 func TestStatusPage(t *testing.T) {
-	srv, err := New(StatusPage{Version: "v1.2.3", Commit: "abc", Date: "2026-11-08", BindAddr: ":8090", DBEngine: "sqlite"})
+	srv, err := New(StatusPage{Version: "v1.2.3", Commit: "abc", Date: "2026-11-08", BindAddr: ":8090", DBEngine: "sqlite"}, Deps{})
 	if err != nil {
 		t.Fatalf("New(): %v", err)
 	}
@@ -47,7 +47,7 @@ func TestStatusPage(t *testing.T) {
 }
 
 func TestStaticHtmxServed(t *testing.T) {
-	srv, err := New(StatusPage{})
+	srv, err := New(StatusPage{}, Deps{})
 	if err != nil {
 		t.Fatalf("New(): %v", err)
 	}

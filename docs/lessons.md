@@ -13,6 +13,10 @@ that prevents recurrence. Newest LAST. Never delete or edit old lines.
   by FILE NAME, and `ExecuteTemplate(w, "status", ...)` 500s: template not found.
   Rule: `ParseFS` → execute by file name unless templates `{{define}}` a name;
   every handler-template pair asserts rendering in a test (caught at 22:04).
+- 2026-11-09 — After a session working-directory move, a file *write* through a
+  relative path silently landed nowhere (the old-path content persisted), and a
+  later build failed on stale symbols. Rule: after any directory change, write
+  with absolute paths, or read back the file before compiling against it.
 
 Rules: one lesson = one insight + one rule. If a lesson needs context, link the file.
 
