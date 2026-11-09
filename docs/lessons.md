@@ -19,8 +19,8 @@ that prevents recurrence. Newest LAST. Never delete or edit old lines.
 - 2026-11-09 — The first real crawl ran with the placeholder UA contact
   (decision 2.2 said placeholder only UNTIL the first real crawl). Rule:
   real-crawl code paths must assert contact-string != placeholder, or run
-  them only after the address is filled in. Fill the contact NOW, before
-  any scheduled crawl exists.
+  them only after the address is filled in. RESOLVED 2026-11-09 same day:
+  owner chose the repo issue tracker (decision 1.3).
 - 2026-11-09 — After a session working-directory move, a file *write* through a
   relative path silently landed nowhere (the old-path content persisted), and a
   later build failed on stale symbols. Rule: after any directory change, write

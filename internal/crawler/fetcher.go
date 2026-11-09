@@ -13,12 +13,14 @@ import (
 	"github.com/Esemby/JobCrawler/internal/version"
 )
 
-// DefaultUA is the honest User-Agent sent on every request. The contact part
-// is a DELIBERATE placeholder (owner decision 2026-11-09: fill in a real
-// address before the first crawl against an external host; never leave the
-// placeholder in place for production crawls — see docs/config.md).
+// DefaultUA is the honest User-Agent sent on every request. Contact channel
+// (owner decision 1.3, 2026-11-09): the public GitHub repo's issue tracker.
+// GitHub does NOT relay mail to noreply-style addresses — mail sent there is
+// silently dropped (verified 2026-11-09) — so the issue tracker is the only
+// real channel and the string below points at it.
 func DefaultUA() string {
-	return "jobcrawler/" + version.Version + " (+https://github.com/Esemby/JobCrawler; contact: PLACEHOLDER)"
+	return "jobcrawler/" + version.Version +
+		" (+https://github.com/Esemby/JobCrawler/issues; contact: open an issue)"
 }
 
 const (

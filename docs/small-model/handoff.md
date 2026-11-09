@@ -41,13 +41,13 @@ No history here. Newest state only.
   model quality (empty replies, hallucinated context). explore-agent read
   tasks remain 3/3. Evidence: docs/small-model/known-pitfalls.md, scorecard.
 
-## Blockers / owner input needed (only ONE)
+## Blockers / owner input needed
 
-1. UA contact email: the first real crawl has now HAPPENED (2026-11-09), so
-   per owner decision 2.2 the placeholder in crawler.DefaultUA must be
-   replaced with a real contact BEFORE any further/scheduled real crawl.
-   Until the owner supplies the address: do not run real crawls; tests all
-   use fakes, so nothing is blocked in code.
+None. The UA contact-question was decided 2026-11-09 (decision 1.3): contact
+channel = the public repo's issue tracker (https://github.com/Esemby/JobCrawler/issues);
+GitHub relays no mail to noreply-style addresses (owner was told; mail to it
+is silently dropped), so the tracker is the only channel and requires a
+GitHub account — documented in docs/config.md row crawl.user_agent.
 
 ## Next task (ONE)
 

@@ -44,7 +44,8 @@ the reason — a documented "no" prevents repeated relitigating.
   decision.
 - Politeness: ≥ 2 s + ≤ 1 s jitter between requests to the same host, robots
   re-read at most daily, robots probe errors refuse the round (conservative).
-- UA: build-time constant (`crawler.DefaultUA`) — the placeholder contact
-  must be replaced before the next real crawl (config.md row).
+- UA: build-time constant (`crawler.DefaultUA`) — contact channel is the
+  public repo's issue tracker (owner decision 1.3, 2026-11-09). Reminder on
+  record: GitHub relays NO mail to noreply-style addresses.
 - To do with later phases: conditional GET (ETag/If-Modified-Since), error
   back-off, crawl.user_agent as a runtime setting, a scheduler.
