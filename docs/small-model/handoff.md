@@ -5,42 +5,43 @@ No history here. Newest state only.
 
 ## Session
 
-- Date: 2026-11-08 (overnight block)
-- Model: GLM-5.3-Flash Free (cloud bootstrap agent) — with gpt-oss:20b subagent runs
-- Commit: see `git log --oneline -6`
+- Date: 2026-11-09 (overnight block, closed ~11:35)
+- Model: GLM-5.3-Flash Free (cloud bootstrap agent) + background Phase-2 agent
+- Commit: 0fd07c9 pushed to origin/main; `git status` clean
 
 ## Project state
 
-- Phase 0(exit gate ran): handover test #0 executed twice by gpt-oss:20b via
-  opencode subagent — attempt 1 failed (chat-opener response, zero tool use),
-  attempt 2 passed the task (lesson appended + committed) with partial loop
-  fidelity. Both attempts + fixes logged in `docs/small-model/scorecard.md` and
-  `docs/small-model/known-pitfalls.md`.
-- Phase 1 skeleton (bind/c/version/config/web+healthz+status/htmx/LICENSE/
-  systemd unit) landed on the Flagship in `~/tools/go` (no sudo available),
-  symlinked at `~/.local/bin/go`.
-- Repo: github.com/Esemby/JobCrawler (SSH remote `origin/main`, no force-push).
-- Next in training loop (per scorecard progress):: handover test #1 in a fresh
-  clean tree, then a docs-only task variant, then raising difficulty
-  (`make check`-gated tasks only).
+- Phase 1 done, pushed. Phase 2 done, pushed: Store interface + embedded
+  migration 0001 (settings, job_sources, jobs, users, user_flags skeleton per
+  ADR-0004), SQLite engine (WAL, modernc.org/sqlite, no CGO), bootstrap TOML
+  with env precedence, settings CRUD, System + Database pages (validation,
+  hot-reload hook, masked DSN, sqlite test-connection), wired in main.
+- Training loop: handover #0 passed (2nd attempt), #1 passed partially via
+  explore-agent reads; write-tasks through `general` blocked by ollama provider
+  tool-dispatch failures — evidence in docs/small-model/scorecard.md and
+  known-pitfalls.md. gpt-oss:20b IS now pulled into local ollama (was missing).
+- Apply the morning-review rules after reading the docs above.
 
 ## Next task (ONE)
 
-Run handover test #1 (gpt-oss:20b via opencode subagent): same loop, task =
-add `internal/version` CHANGELOG-style entries? — no: first assess Phase 1
-acceptance from a clean tree:
-    1. `go build ./...` green
-    2. `go test ./...` green
-    3. `make check` green
+Phase 3 — first real crawl (Greenhouse public JSON, per docs/sources.md
+register + docs/playbooks/add-a-source.md). Needs the owner for: ToS sign-off
+for using boards.greenhouse.io public JSON at crawl volume, and a UA contact
+email for `crawl.user_agent`. Before code: save a real non-secret fixture of a
+Greenhouse board into testdata/greenhouse/.
 
 ## Blockers / questions for the owner
 
-- None blocking. Owner asleep per ADR-0005; defaults documented there.
+1. Greenhouse ToS check + polite volume: confirm allowed request rate.
+2. Contact email for User-Agent (politeness contract requires it).
+3. opencode↔ollama provider tool-dispatch — decide whether to debug locally or
+   run small-model tests from another runner.
 
 ## Verify commands
 
 ```
-git log --oneline -6
-make check
-curl -s http://127.0.0.1:8090/healthz   # after make run
+git log --oneline -8 ; git status --short   # expect clean
+make check                                   # expect green
+./bin/jobcrawler & curl -s http://127.0.0.1:8090/healthz   # "ok dev"
+curl -s http://127.0.0.1:8090/system         # settings table
 ```
