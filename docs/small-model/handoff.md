@@ -7,7 +7,7 @@ No history here. Newest state only.
 
 - Date: 2026-11-09/10 (overnight block while owner slept, 6h window)
 - Model: GLM-5.3-Flash Free (cloud builder agent)
-- HEAD: 67cbc75 pushed to origin/main; `make check` green; git clean.
+- HEAD: 8f48fd5 pushed to origin/main; `make check` green; git clean.
 
 ## Project state
 
@@ -57,9 +57,9 @@ Phase 4 leftovers, in this order (docs/playbooks/reference):
    docs example in `docs/testing.md` if the breakdown format changes.
 3. Phase 5: scheduler (poll per source, settings crawl.interval etc.),
    systemd-ready.
-Training task option meanwhile: one `explore`-agent read-review of
-internal/filter (ask it to summarize rule semantics in ≤ 5 lines) — score
-it into docs/small-model/scorecard.md.
+Training task option meanwhile: another `explore` read task on a file under
+100 lines (rules.go is ~230 → fails; candidate: internal/store/job.go, ~95
+lines) — score it into docs/small-model/scorecard.md.
 
 ## Invariants to keep
 
