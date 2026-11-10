@@ -24,9 +24,10 @@ type jobRow struct {
 	Title, Company, Location, Source, State string
 	Link                                    string
 	FirstSeen, LastSeen                     string
-	// Verdict/Why come from the stage-1 table (empty = not yet evaluated).
+	// Verdict/Why/Score come from the stage 1+2 tables (empty = not evaluated).
 	Verdict string
 	Why     string
+	Score   int
 }
 
 // srcRow is one configured source row for the form table.
@@ -89,7 +90,11 @@ func (s *Server) jobsPageData(ctx context.Context) ([]jobRow, []srcRow, error) {
 		}
 		if v, ok := verdicts[j.Fingerprint]; ok {
 			row.Verdict = v.Result
+			row.Score = v.Score
 			row.Why = strings.Join(v.Reasons, "; ")
+			if len(v.ScoreReasons) > 0 {
+				row.Why += " ‖ score: " + strings.Join(v.ScoreReasons, "; ")
+			}
 		}
 		jobRows = append(jobRows, row)
 	}
@@ -213,12 +218,14 @@ func (s *Server) evaluateVerdicts(ctx context.Context) (int, int, error) {
 	if err != nil {
 		return 0, 0, err
 	}
-	cfg := filter.ConfigFromSettings(config.Effective(overrides))
+	effective := config.Effective(overrides)
+	cfg := filter.ConfigFromSettings(effective)
+	tags := filter.TagRules(effective["filter.tag_weights"])
 	jobs, err := s.deps.Store.ListJobs(ctx, "active")
 	if err != nil {
 		return 0, 0, err
 	}
-	verdicts := filter.EvaluateAll(jobs, cfg)
+	verdicts := filter.EvaluateAll(jobs, cfg, tags)
 	rej, acc := 0, 0
 	for _, v := range verdicts {
 		if v.Result == store.Rejected {

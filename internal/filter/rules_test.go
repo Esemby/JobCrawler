@@ -130,7 +130,8 @@ func TestEvaluateAll(t *testing.T) {
 		{Title: "B", Company: "acme", Fingerprint: "fb"},
 	}
 	cfg := Config{BlacklistCompanies: []string{"acme"}}
-	out := EvaluateAll(jobs, cfg)
+	tags := TagRules("rust@5=rust")
+	out := EvaluateAll(jobs, cfg, tags)
 	if len(out) != 2 {
 		t.Fatalf("map size = %d, want 2", len(out))
 	}
@@ -139,5 +140,50 @@ func TestEvaluateAll(t *testing.T) {
 	}
 	if out["fb"].Reasons[0] != "company blacklist match: acme" {
 		t.Errorf("reason string changed: %q", out["fb"].Reasons[0])
+	}
+	if out["fa"].Score != 0 {
+		t.Errorf("job with no tag keyword scored %d, want 0", out["fa"].Score)
+	}
+}
+
+func TestTagRulesParse(t *testing.T) {
+	rules := TagRules("rust@5=rust | rustc, lang-de@3=deutsch|german, broken@=x, =y, bad@2=")
+	if len(rules) != 3 {
+		t.Fatalf("rules = %d (+%v), want 3 (empty name or no keywords dropped)", len(rules), rules)
+	}
+	if rules[0].Name != "rust" || rules[0].Weight != 5 ||
+		rules[0].Keywords[0] != "rust" || rules[0].Keywords[1] != "rustc" {
+		t.Errorf("rule 0 = %+v", rules[0])
+	}
+	if rules[1].Name != "lang-de" || rules[1].Weight != 3 {
+		t.Errorf("rule 1 = %+v", rules[1])
+	}
+	// Missing weight falls back to 1 and keeps the tag usable.
+	if rules[2].Name != "broken" || rules[2].Weight != 1 {
+		t.Errorf("rule 2 = %+v, want weight fallback 1", rules[2])
+	}
+	if got := TagRules(""); len(got) != 0 {
+		t.Errorf("empty value produced %v", got)
+	}
+}
+
+func TestScoreTagRules(t *testing.T) {
+	rules := TagRules("rust@5=rust, lang-de@3=deutsch|german")
+	score, breakdown := ScoreTagRules("backend engineer, deutsch-fließend", rules)
+	if score != 3 {
+		t.Errorf("score = %d, want 3", score)
+	}
+	if len(breakdown) != 1 || breakdown[0] != `tag lang-de matched "deutsch" (weight 3)` {
+		t.Errorf("breakdown = %v", breakdown)
+	}
+	// Weights add up.
+	score, _ = ScoreTagRules("rust developer (german team)", rules)
+	if score != 8 {
+		t.Errorf("combined score = %d, want 8", score)
+	}
+	// No rule matches.
+	score, breakdown = ScoreTagRules("python wizard", rules)
+	if score != 0 || breakdown != nil {
+		t.Errorf("no-match score/breakdown = %d %v", score, breakdown)
 	}
 }

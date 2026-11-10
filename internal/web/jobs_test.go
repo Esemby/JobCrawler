@@ -271,6 +271,52 @@ func TestVerdictSurvivesSettingsChange(t *testing.T) {
 	}
 }
 
+func TestCrawlRunScoresTags(t *testing.T) {
+	board := greenhouseFixture(t)
+	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "robots.txt") {
+			w.Write([]byte("User-agent: *\nDisallow: /embed/\n"))
+			return
+		}
+		w.Write(board)
+	}))
+	t.Cleanup(origin.Close)
+
+	f := setupJobs(t)
+	c := f.http.Client()
+	ctx := context.Background()
+	if _, err := f.store.AddSource(ctx, "greenhouse-test", "greenhouse",
+		origin.URL+"/v1/boards/propublica/jobs"); err != nil {
+		t.Fatalf("seed source: %v", err)
+	}
+	// The fixture is full of "Remote, United States": weight 4 for remote.
+	if err := f.store.SetSetting(ctx, "filter.tag_weights", "remote@4=remote"); err != nil {
+		t.Fatalf("SetSetting: %v", err)
+	}
+
+	code, body := postJobs(t, c, f.http.URL+"/crawl/run", "")
+	if code != 200 || !strings.Contains(body, "4 accepted, 0 rejected") {
+		t.Fatalf("run wrong (no no-gos set, all accepted): %.200s", body)
+	}
+	code, body = getJobs(t, c, f.http.URL+"/jobs")
+	if code != 200 {
+		t.Fatalf("page status %d", code)
+	}
+	if strings.Count(body, ">score 4<") != 3 {
+		t.Errorf("expected three 'score 4' badges (3 remote jobs), body: %.400s", body)
+	}
+	if !strings.Contains(body, "tag remote matched") {
+		t.Errorf("breakdown text missing")
+	}
+	if !strings.Contains(body, "(weight 4)") {
+		t.Errorf("weight text missing")
+	}
+	// No threshold was configured: nothing new is rejected by score alone.
+	if strings.Contains(body, `>score 0<`) {
+		t.Errorf("new-york job must have score badge suppressed at 0")
+	}
+}
+
 func TestJobsPageNeedsStore(t *testing.T) {
 	// Zero deps: the jobs handlers must fail loudly, never render lies.
 	srv, err := New(StatusPage{}, Deps{})

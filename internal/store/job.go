@@ -38,14 +38,21 @@ const (
 	Rejected = "rejected"
 )
 
-// Verdict is the stage-1 filter result stored per fingerprint
+// Verdict is the stage-2 filter result stored per fingerprint
 // (docs/glossary.md: Verdict, Reason). Reasons is the human-readable chain;
-// it is stored newline-joined and split on read.
+// it is stored newline-joined and split on read. Score is the stage-2
+// weighted-tag result (informational in v1); ScoreReasons the breakdown.
 type Verdict struct {
 	Fingerprint string
 	Result      string // accepted | rejected
 	Reasons     []string
+	// EvaluatedAt is the RFC3339 timestamp of the last SaveVerdicts write.
 	EvaluatedAt string
+	// Score is the stage-2 weighted-tag result (0 when no tag rules are
+	// configured; purely informational in v1); ScoreReasons is the
+	// breakdown, newline-joined next to Reasons on read.
+	Score        int
+	ScoreReasons []string
 }
 
 // Fingerprint builds the stable dedupe key: normalized company + title +

@@ -24,6 +24,7 @@ func (s *Store) SaveVerdicts(ctx context.Context, verdicts map[string]store.Verd
 			return fmt.Errorf("save verdict %s: result %q must be accepted or rejected", fp, v.Result)
 		}
 		joined := strings.Join(v.Reasons, "\n")
+		scoreJoin := strings.Join(v.ScoreReasons, "\n")
 		// Two statements instead of SQLite-only ON CONFLICT upsert (ADR-0002:
 		// both engines run the same code path). Settings upserts predate
 		// this rule and are a Phase 6 cleanup.
@@ -34,27 +35,32 @@ func (s *Store) SaveVerdicts(ctx context.Context, verdicts map[string]store.Verd
 		}
 		if exists > 0 {
 			if _, err := s.db.ExecContext(ctx,
-				`UPDATE job_verdicts SET result = ?, reasons = ?, evaluated_at = ?
-				 WHERE fingerprint = ?`, v.Result, joined, now, fp); err != nil {
+				`UPDATE job_verdicts
+				    SET result = ?, reasons = ?, score = ?, score_reasons = ?, evaluated_at = ?
+				  WHERE fingerprint = ?`,
+				v.Result, joined, v.Score, scoreJoin, now, fp); err != nil {
 				return fmt.Errorf("save verdict %s: update: %w", fp, err)
 			}
 			continue
 		}
 		if _, err := s.db.ExecContext(ctx, `
-			INSERT INTO job_verdicts (fingerprint, result, reasons, evaluated_at)
-			VALUES (?, ?, ?, ?)`, fp, v.Result, joined, now); err != nil {
+			INSERT INTO job_verdicts
+				(fingerprint, result, reasons, score, score_reasons, evaluated_at)
+			VALUES (?, ?, ?, ?, ?, ?)`,
+			fp, v.Result, joined, v.Score, scoreJoin, now); err != nil {
 			return fmt.Errorf("save verdict %s: insert: %w", fp, err)
 		}
 	}
 	return nil
 }
 
-// ListVerdicts returns all stored verdicts keyed by fingerprint. Reason
-// lines are split back from the newline-joined column; empty reason text
-// yields nil.
+// ListVerdicts returns all stored verdicts keyed by fingerprint. Reason and
+// score-breakdown lines are split back from their newline-joined columns;
+// empty text yields nil.
 func (s *Store) ListVerdicts(ctx context.Context) (map[string]store.Verdict, error) {
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT fingerprint, result, reasons, evaluated_at FROM job_verdicts`)
+		`SELECT fingerprint, result, reasons, score, score_reasons, evaluated_at
+		 FROM job_verdicts`)
 	if err != nil {
 		return nil, fmt.Errorf("list verdicts: %w", err)
 	}
@@ -62,15 +68,19 @@ func (s *Store) ListVerdicts(ctx context.Context) (map[string]store.Verdict, err
 	out := make(map[string]store.Verdict)
 	for rows.Next() {
 		var (
-			v      store.Verdict
-			joined string
-			seen   string
+			v         store.Verdict
+			joined    string
+			scoreJoin string
+			seen      string
 		)
-		if err := rows.Scan(&v.Fingerprint, &v.Result, &joined, &seen); err != nil {
+		if err := rows.Scan(&v.Fingerprint, &v.Result, &joined, &v.Score, &scoreJoin, &seen); err != nil {
 			return nil, fmt.Errorf("list verdicts: scan: %w", err)
 		}
 		if joined != "" {
 			v.Reasons = strings.Split(joined, "\n")
+		}
+		if scoreJoin != "" {
+			v.ScoreReasons = strings.Split(scoreJoin, "\n")
 		}
 		v.EvaluatedAt = seen
 		out[v.Fingerprint] = v

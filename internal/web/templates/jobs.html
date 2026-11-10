@@ -45,7 +45,7 @@
       <td>{{.Source}}</td>
       <td><span class="badge{{if eq .State "disappeared"}} off{{end}}">{{.State}}</span></td>
       <td>
-        {{if .Verdict}}<span class="badge{{if eq .Verdict "rejected"}} off{{end}}">{{.Verdict}}</span>{{else}}<span class="muted">—</span>{{end}}
+        {{if .Verdict}}<span class="badge{{if eq .Verdict "rejected"}} off{{end}}">{{.Verdict}}</span>{{if .Score}} <span class="badge">score {{.Score}}</span>{{end}}{{else}}<span class="muted">—</span>{{end}}
       </td>
       <td class="why">{{.Why}}</td>
       <td>{{.FirstSeen}}</td>

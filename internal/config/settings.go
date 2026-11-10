@@ -54,6 +54,10 @@ func Registered() []Setting {
 			Key: "filter.must_haves", Type: "string", Default: "", Restart: false,
 			Help: "Comma-separated required terms; ALL must match, '|' separates OR alternatives (e.g. berlin|remote). Applies live.",
 		},
+		{
+			Key: "filter.tag_weights", Type: "string", Default: "", Restart: false,
+			Help: "Weighted interest tags: specs 'name@weight=kw1|kw2', comma-separated, weight 1-99. Adds an informational score per job (stage 2, no cutoff). Applies live.",
+		},
 	}
 }
 
@@ -102,6 +106,8 @@ func ValidateSetting(key, value string) error {
 		return validateFilterList("filter.no_gos", value)
 	case "filter.must_haves":
 		return validateFilterList("filter.must_haves", value)
+	case "filter.tag_weights":
+		return validateFilterList("filter.tag_weights", value)
 	default:
 		return fmt.Errorf("unknown setting key %q", key)
 	}

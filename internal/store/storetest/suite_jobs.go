@@ -164,7 +164,8 @@ func saveAndListVerdicts(t *testing.T, s store.Store) {
 	ctx := context.Background()
 	vs := map[string]store.Verdict{
 		"fp-acc": {Result: store.Accepted,
-			Reasons: []string{"passed stage 1 (no rule fired)"}},
+			Reasons: []string{"passed stage 1 (no rule fired)"},
+			Score:   3, ScoreReasons: []string{`tag rust matched "rust" (weight 3)`}},
 		"fp-rej": {Result: store.Rejected,
 			Reasons: []string{"no-go match: unpaid", "must-have not met: senior"}},
 	}
@@ -177,6 +178,11 @@ func saveAndListVerdicts(t *testing.T, s store.Store) {
 	}
 	if len(got) != 2 {
 		t.Fatalf("verdicts = %d, want 2", len(got))
+	}
+	acc := got["fp-acc"]
+	if acc.Result != store.Accepted || acc.Score != 3 ||
+		len(acc.ScoreReasons) != 1 || acc.ScoreReasons[0] != `tag rust matched "rust" (weight 3)` {
+		t.Errorf("score roundtrip lost: %+v", acc)
 	}
 	rej := got["fp-rej"]
 	if rej.Result != store.Rejected || len(rej.Reasons) != 2 ||
@@ -191,15 +197,15 @@ func saveAndListVerdicts(t *testing.T, s store.Store) {
 func verdictUpsertOverwrites(t *testing.T, s store.Store) {
 	ctx := context.Background()
 	if err := s.SaveVerdicts(ctx, map[string]store.Verdict{
-		"fp": {Result: store.Rejected, Reasons: []string{"old"}}}); err != nil {
+		"fp": {Result: store.Rejected, Reasons: []string{"old"}, Score: 2}}); err != nil {
 		t.Fatalf("first SaveVerdicts: %v", err)
 	}
 	if err := s.SaveVerdicts(ctx, map[string]store.Verdict{
-		"fp": {Result: store.Accepted, Reasons: []string{"new"}}}); err != nil {
+		"fp": {Result: store.Accepted, Reasons: []string{"new"}, Score: 0}}); err != nil {
 		t.Fatalf("second SaveVerdicts: %v", err)
 	}
 	got, _ := s.ListVerdicts(ctx)
-	if got["fp"].Result != store.Accepted || got["fp"].Reasons[0] != "new" {
+	if got["fp"].Result != store.Accepted || got["fp"].Reasons[0] != "new" || got["fp"].Score != 0 {
 		t.Errorf("upsert did not overwrite: %+v", got["fp"])
 	}
 }
