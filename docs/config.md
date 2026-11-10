@@ -44,9 +44,12 @@ ADR-0002, loaded in `internal/config`):
 | system.bind_addr | string | `:8090` | valid host:port | HTTP bind for the web UI. LAN interface only. Port 8080 is FORBIDDEN (redirect.py lives there). |
 | system.log_level | string | `info` | debug, info, warn, error | Applies live via the web SavedHook (no restart). |
 | system.log_format | string | `text` | text, json | slog output format. Restart required. |
-| crawl.concurrency | int | `2` | 1-8 | Parallel fetches. Placeholder until the crawler lands (Phase 4). Applies live. |
-| crawl.rate_per_host_ms | int | `2000` | ≥ 250ms | Min delay between requests to one host, plus jitter. NOT IMPLEMENTED YET (Phase 3). |
+| crawl.concurrency | int | `2` | 1-8 | Parallel fetches. Placeholder until the scheduler phase lands (Phase 5+). Applies live. |
+| crawl.rate_per_host_ms | int | `2000` | ≥ 250ms | Min delay between requests to one host, plus jitter. Currently a build-time constant in `internal/crawler/fetcher.go` (minHostDelay, Phase 3); becomes a real setting with the scheduler phase. |
 | crawl.user_agent | string | `jobcrawler/<version> (+https://github.com/Esemby/JobCrawler/issues; contact: open an issue)` | must contain "/" | UA string; the contact field names a PUBLIC channel: the repo's issue tracker (owner decision 1.3, 2026-11-09). Implemented as a build-time constant (`crawler.DefaultUA`) since Phase 3; the row becomes a real runtime setting with the scheduler phase. NOTE: GitHub relays NO mail to noreply-style addresses (silently dropped) — issues are the only channel, and they need a GitHub account. If a direct mail channel is ever wanted, revisit this row with a dedicated alias mailbox. |
+| filter.blacklist_companies | string | *(empty)* | single line, ≤ 2000 chars | Comma-separated companies (case-insensitive substring) always rejected. Applies live (read each crawl run). |
+| filter.no_gos | string | *(empty)* | single line, ≤ 2000 chars | Comma-separated keywords/phrases that disqualify (matched in title, company, location; description matching arrives with source content fetch). Applies live. |
+| filter.must_haves | string | *(empty)* | single line, ≤ 2000 chars | Comma-separated required terms; ALL must match; `\|` separates OR alternatives (e.g. `berlin\|remote`). Applies live. Stage-1 only — scoring (weights) lands later. |
 | sources.* | list | - | per-source | One entry per configured source; see `sources.md`. |
 | filters.* | lists | empty | see filter playbook | Blacklist, no-gos, must-haves, tags, location rules. |
 | review.enabled | bool | `false` | - | Stage 3 gate. System must work fully with this off. |
