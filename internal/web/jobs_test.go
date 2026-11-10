@@ -169,6 +169,108 @@ func TestCrawlRunEndToEnd(t *testing.T) {
 	}
 }
 
+func TestCrawlRunAppliesFilters(t *testing.T) {
+	board := greenhouseFixture(t)
+	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasSuffix(r.URL.Path, "robots.txt"):
+			w.Write([]byte("User-agent: *\nDisallow: /embed/\n"))
+		case strings.HasSuffix(r.URL.Path, "/jobs"):
+			w.Write(board)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(origin.Close)
+
+	f := setupJobs(t)
+	c := f.http.Client()
+	ctx := context.Background()
+	if _, err := f.store.AddSource(ctx, "greenhouse-test", "greenhouse",
+		origin.URL+"/v1/boards/propublica/jobs"); err != nil {
+		t.Fatalf("seed source: %v", err)
+	}
+	// Owner-configured no-go: the fixture contains a "Video Editor..." job.
+	if err := f.store.SetSetting(ctx, "filter.no_gos", "video editor"); err != nil {
+		t.Fatalf("SetSetting: %v", err)
+	}
+
+	code, body := postJobs(t, c, f.http.URL+"/crawl/run", "")
+	if code != 200 {
+		t.Fatalf("run status = %d, body: %s", code, body)
+	}
+	if !strings.Contains(body, "3 accepted, 1 rejected") {
+		t.Errorf("flash missing filter summary; body: %.400s", body)
+	}
+
+	code, body = getJobs(t, c, f.http.URL+"/jobs")
+	if code != 200 {
+		t.Fatalf("jobs page status = %d", code)
+	}
+	if !strings.Contains(body, "no-go match: video editor") {
+		t.Errorf("page missing the why for the rejected job; body: %.200s", body)
+	}
+	if !strings.Contains(body, ">rejected</span>") {
+		t.Errorf("page missing rejected badge")
+	}
+}
+
+func TestVerdictSurvivesSettingsChange(t *testing.T) {
+	// Re-running the crawl with changed filter settings must OVERWRITE the
+	// stored verdict (truthfulness over history).
+	board := greenhouseFixture(t)
+	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "robots.txt") {
+			w.Write([]byte("User-agent: *\nDisallow: /embed/\n"))
+			return
+		}
+		w.Write(board)
+	}))
+	t.Cleanup(origin.Close)
+
+	f := setupJobs(t)
+	c := f.http.Client()
+	ctx := context.Background()
+	if _, err := f.store.AddSource(ctx, "greenhouse-test", "greenhouse",
+		origin.URL+"/v1/boards/propublica/jobs"); err != nil {
+		t.Fatalf("seed source: %v", err)
+	}
+
+	// No filters: everything accepted.
+	if _, body := postJobs(t, c, f.http.URL+"/crawl/run", ""); !strings.Contains(body, "4 accepted, 0 rejected") {
+		t.Fatalf("first run flash wrong")
+	}
+	// Tighten and re-run: 3 Remote jobs flip to rejected, the New York one
+	// stays accepted, and the verdict rows are overwritten in place.
+	if err := f.store.SetSetting(ctx, "filter.no_gos", "remote"); err != nil {
+		t.Fatalf("SetSetting: %v", err)
+	}
+	if _, body := postJobs(t, c, f.http.URL+"/crawl/run", ""); !strings.Contains(body, "1 accepted, 3 rejected") {
+		t.Fatalf("second run flash wrong after settings change")
+	}
+	vs, err := f.store.ListVerdicts(ctx)
+	if err != nil {
+		t.Fatalf("ListVerdicts: %v", err)
+	}
+	if len(vs) != 4 {
+		t.Fatalf("verdict rows = %d, want 4", len(vs))
+	}
+	rejected, accepted := 0, 0
+	for fp, v := range vs {
+		if v.Result == store.Rejected {
+			rejected++
+			if v.Reasons[0] != "no-go match: remote" {
+				t.Errorf("verdict %s reason wrong: %+v", fp[:8], v)
+			}
+			continue
+		}
+		accepted++
+	}
+	if rejected != 3 || accepted != 1 {
+		t.Errorf("verdict spread = %d rejected / %d accepted, want 3/1", rejected, accepted)
+	}
+}
+
 func TestJobsPageNeedsStore(t *testing.T) {
 	// Zero deps: the jobs handlers must fail loudly, never render lies.
 	srv, err := New(StatusPage{}, Deps{})

@@ -9,8 +9,11 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Esemby/JobCrawler/internal/config"
 	"github.com/Esemby/JobCrawler/internal/crawler"
+	"github.com/Esemby/JobCrawler/internal/filter"
 	"github.com/Esemby/JobCrawler/internal/sources/greenhouse"
+	"github.com/Esemby/JobCrawler/internal/store"
 )
 
 // jobsTpl is parsed once; renders the Jobs page (list + sources + manual run).
@@ -21,6 +24,9 @@ type jobRow struct {
 	Title, Company, Location, Source, State string
 	Link                                    string
 	FirstSeen, LastSeen                     string
+	// Verdict/Why come from the stage-1 table (empty = not yet evaluated).
+	Verdict string
+	Why     string
 }
 
 // srcRow is one configured source row for the form table.
@@ -56,7 +62,7 @@ func (s *Server) jobsHandler() http.Handler {
 	})
 }
 
-// jobsPageData loads both lists through the store contract.
+// jobsPageData loads both lists plus the verdict map (stage-1 results).
 func (s *Server) jobsPageData(ctx context.Context) ([]jobRow, []srcRow, error) {
 	jobs, err := s.deps.Store.ListJobs(ctx, "*")
 	if err != nil {
@@ -66,17 +72,26 @@ func (s *Server) jobsPageData(ctx context.Context) ([]jobRow, []srcRow, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	verdicts, err := s.deps.Store.ListVerdicts(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
 	jobRows := make([]jobRow, 0, len(jobs))
 	for _, j := range jobs {
 		state := j.State
 		if state == "" {
 			state = "active"
 		}
-		jobRows = append(jobRows, jobRow{
+		row := jobRow{
 			Title: j.Title, Company: j.Company, Location: j.Location,
 			Source: j.SourceName, State: state, Link: j.URL,
 			FirstSeen: j.FirstSeen, LastSeen: j.LastSeen,
-		})
+		}
+		if v, ok := verdicts[j.Fingerprint]; ok {
+			row.Verdict = v.Result
+			row.Why = strings.Join(v.Reasons, "; ")
+		}
+		jobRows = append(jobRows, row)
 	}
 	srcRows := make([]srcRow, 0, len(sources))
 	for _, so := range sources {
@@ -148,7 +163,8 @@ func (s *Server) toggleSourceHandler() http.Handler {
 }
 
 // crawlRunHandler crawls every ENABLED source, sequentially, each with its
-// own politeness budget, then reports one summary line per source as flash.
+// own politeness budget, then re-runs the stage-1 filter over all active
+// jobs, saves verdicts, and reports one summary line per source as flash.
 // A fresh Fetcher per run keeps politeness state scoped and predictable.
 func (s *Server) crawlRunHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -156,7 +172,8 @@ func (s *Server) crawlRunHandler() http.Handler {
 			http.Error(w, "no store configured", http.StatusInternalServerError)
 			return
 		}
-		sources, err := s.deps.Store.ListSources(r.Context())
+		ctx := r.Context()
+		sources, err := s.deps.Store.ListSources(ctx)
 		if err != nil {
 			http.Error(w, "list sources: "+err.Error(), http.StatusInternalServerError)
 			return
@@ -167,16 +184,53 @@ func (s *Server) crawlRunHandler() http.Handler {
 			if !src.Enabled {
 				continue
 			}
-			n, err := crawler.CrawlSource(r.Context(), f, s.deps.Store, src)
+			n, err := crawler.CrawlSource(ctx, f, s.deps.Store, src)
 			switch {
 			case err != nil:
 				lines = append(lines, fmt.Sprintf("%s: FAILED %v", src.Name, err))
+				continue
 			default:
 				lines = append(lines, fmt.Sprintf("%s: %d new", src.Name, n))
 			}
 		}
-		s.redirect(w, r, "/jobs", "crawl run — "+strings.Join(lines, " | "))
+		rej, acc, err := s.evaluateVerdicts(ctx)
+		if err != nil {
+			http.Error(w, "evaluate verdicts: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		s.redirect(w, r, "/jobs",
+			"crawl run — "+strings.Join(lines, " | ")+fmt.Sprintf(
+				" | stage 1: %d accepted, %d rejected", acc, rej))
 	})
+}
+
+// evaluateVerdicts re-runs stage 1 over every active job and upserts the
+// results (migration 0003). Re-evaluating everything each run is idempotent
+// by fingerprint and keeps verdicts truthful when filter settings change.
+// Returns (rejected, accepted) counts.
+func (s *Server) evaluateVerdicts(ctx context.Context) (int, int, error) {
+	overrides, err := s.deps.Store.ListSettings(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+	cfg := filter.ConfigFromSettings(config.Effective(overrides))
+	jobs, err := s.deps.Store.ListJobs(ctx, "active")
+	if err != nil {
+		return 0, 0, err
+	}
+	verdicts := filter.EvaluateAll(jobs, cfg)
+	rej, acc := 0, 0
+	for _, v := range verdicts {
+		if v.Result == store.Rejected {
+			rej++
+		} else {
+			acc++
+		}
+	}
+	if err := s.deps.Store.SaveVerdicts(ctx, verdicts); err != nil {
+		return 0, 0, err
+	}
+	return rej, acc, nil
 }
 
 // redirect sends the standard flash redirect (settings.go pattern, without

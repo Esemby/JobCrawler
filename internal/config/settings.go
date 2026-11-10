@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net"
 	"strconv"
+	"strings"
 )
 
 // Setting describes one runtime setting row (docs/config.md "Runtime
@@ -40,6 +41,18 @@ func Registered() []Setting {
 		{
 			Key: "crawl.concurrency", Type: "int", Default: "2", Restart: false,
 			Help: "Parallel fetches, 1-8. Keep low on the Pi. Placeholder until the crawler exists (Phase 4).",
+		},
+		{
+			Key: "filter.blacklist_companies", Type: "string", Default: "", Restart: false,
+			Help: "Comma-separated companies (case-insensitive substring) that are always rejected. Applies live.",
+		},
+		{
+			Key: "filter.no_gos", Type: "string", Default: "", Restart: false,
+			Help: "Comma-separated keywords/phrases that disqualify a job (title/company/location match). Applies live.",
+		},
+		{
+			Key: "filter.must_haves", Type: "string", Default: "", Restart: false,
+			Help: "Comma-separated required terms; ALL must match, '|' separates OR alternatives (e.g. berlin|remote). Applies live.",
 		},
 	}
 }
@@ -83,8 +96,27 @@ func ValidateSetting(key, value string) error {
 		if err != nil || n < 1 || n > 8 {
 			return fmt.Errorf("crawl.concurrency %q: must be an integer from 1 to 8", value)
 		}
+	case "filter.blacklist_companies":
+		return validateFilterList("filter.blacklist_companies", value)
+	case "filter.no_gos":
+		return validateFilterList("filter.no_gos", value)
+	case "filter.must_haves":
+		return validateFilterList("filter.must_haves", value)
 	default:
 		return fmt.Errorf("unknown setting key %q", key)
+	}
+	return nil
+}
+
+// validateFilterList bounds the owner-typed rule lists: single line, sane
+// length, no empty sub-entry sneaking in as match-everything (the filter
+// package also defends this, but load-time rejection is cheaper).
+func validateFilterList(key, value string) error {
+	if len(value) > 2000 {
+		return fmt.Errorf("%s: value is %d chars, must be at most 2000", key, len(value))
+	}
+	if strings.Contains(value, "\n") {
+		return fmt.Errorf("%s: must be a single line (comma-separated)", key)
 	}
 	return nil
 }

@@ -23,6 +23,10 @@ func TestValidateSetting(t *testing.T) {
 		{"concurrency too high", "crawl.concurrency", "9", "1 to 8"},
 		{"concurrency too low", "crawl.concurrency", "0", "1 to 8"},
 		{"concurrency not numeric", "crawl.concurrency", "many", "1 to 8"},
+		{"filter list accept", "filter.no_gos", "unpaid, unpaid internship", ""},
+		{"filter list empty accept", "filter.must_haves", "", ""},
+		{"filter list too long", "filter.blacklist_companies", strings.Repeat("x", 2001), "at most 2000"},
+		{"filter list newline rejected", "filter.no_gos", "a\nb", "single line"},
 		{"unknown key rejected", "filters.magic", "yes", `unknown setting key "filters.magic"`},
 	}
 	for _, tt := range tests {

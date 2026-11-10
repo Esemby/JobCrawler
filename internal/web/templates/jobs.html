@@ -30,11 +30,13 @@
   <h2>Stored jobs</h2>
   <form action="/crawl/run" method="post" class="stack">
     <button type="submit">Run crawl now</button>
-    <span class="muted">crawls every enabled source below, politely (rate-limited)</span>
+    <span class="muted">crawls every enabled source below, politely (rate-limited), then re-filters all active jobs</span>
   </form>
+  <p class="muted">Stage-1 rules (company blacklist, no-gos, must-haves) are configured on the
+  <a href="/system">System</a> page under <code>filter.*</code>; every verdict shows its reason in “Why”.</p>
   {{if .Jobs}}
   <table>
-    <tr><th>Title</th><th>Company</th><th>Location</th><th>Source</th><th>State</th><th>First seen</th><th>Last seen</th></tr>
+    <tr><th>Title</th><th>Company</th><th>Location</th><th>Source</th><th>State</th><th>Stage 1</th><th>Why</th><th>First seen</th><th>Last seen</th></tr>
     {{range .Jobs}}
     <tr>
       <td><a href="{{.Link}}">{{.Title}}</a></td>
@@ -42,6 +44,10 @@
       <td>{{.Location}}</td>
       <td>{{.Source}}</td>
       <td><span class="badge{{if eq .State "disappeared"}} off{{end}}">{{.State}}</span></td>
+      <td>
+        {{if .Verdict}}<span class="badge{{if eq .Verdict "rejected"}} off{{end}}">{{.Verdict}}</span>{{else}}<span class="muted">—</span>{{end}}
+      </td>
+      <td class="why">{{.Why}}</td>
       <td>{{.FirstSeen}}</td>
       <td>{{.LastSeen}}</td>
     </tr>
