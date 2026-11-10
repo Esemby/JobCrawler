@@ -15,6 +15,9 @@ each at least TWICE in a row.
 | 2026-11-08 | handover #1, attempt 1: glossary terms | gpt-oss:20b | NO | chat opener again; vague preamble insufficient | task-template: preamble names ONE concrete file to read |
 | 2026-11-08 | handover #1, attempt 2: same task | gpt-oss:20b | NO | answered IN the workspace-AGENTS.md question format => wrong session cwd; wrong AGENTS.md auto-loaded | protocol: session relocated into project dir; project AGENTS.md now auto-loaded |
 | 2026-11-08 | handover #1, attempt 3: same task | gpt-oss:20b | NO | zero action despite correct cwd — general-agent tool dispatch failure class (see known-pitfalls) | known-pitfalls entry; read-based tasks via explore proven 3/3 |
-| 2026-11-08 | read dry-run of add-a-source.md | gpt-oss:20b | YES | first reported both real ambiguities (fixture minimality, mapping bar) — doc feedback adopted; one provider truncation retry needed | add-a-source.md steps 3+5 now define "minimal" and the minimum asserted field bar |Notes: attempt 2 ran against pre-polluted working tree (Phase 1 WIP present), so
+| 2026-11-08 | read dry-run of add-a-source.md | gpt-oss:20b | YES | first reported both real ambiguities (fixture minimality, mapping bar) — doc feedback adopted; one provider truncation retry needed | add-a-source.md steps 3+5 now define "minimal" and the minimum asserted field bar |
+| 2026-11-10 | read-review internal/filter (6-line summary) | gpt-oss:20b @ ollamalocal | NO | output-token-limit truncation after two continuations (fault class 1: caps, not comprehension) | retry logged below |
+| 2026-11-10 | read-review internal/filter (retry) | gpt-oss:20b @ ollamalocal | NO | hallucinated an unrelated Go program instead of reading any file; zero tool use despite binding being fixed | known-pitfalls: with toolCall fixed, read-tasks still fail on files past model comfort; keep explore tasks to files < 100 lines |
+Notes: attempt 2 ran against pre-polluted working tree (Phase 1 WIP present), so
 "criterion: git status clean" was unsatisfiable by design — assess future tests
 from a clean tree.

@@ -31,6 +31,11 @@ that prevents recurrence. Newest LAST. Never delete or edit old lines.
   despite logging the rule. Rule: in append-only logs, anchor on the file's
   final line, never on an existing entry's first line; re-read after every
   edit.
+- 2026-11-10 — Same clobber class, FOURTH time, on known-pitfalls.md: the
+  new 2026-11-10 entry's edit consumed the first line of the 2026-11-09
+  entry below it. Rule confirmed empirically: NEVER anchor an edit on an
+  existing entry's first line. Anchor on the final line of the target
+  block and re-emit it verbatim in newString.
 
 Rules: one lesson = one insight + one rule. If a lesson needs context, link the file.
 

@@ -11,6 +11,12 @@ Format: `- <symptom> → COUNTERMEASURE: <exact rule>`
 
 ## Entries
 
+- 2026-11-10 — With toolCall binding fixed via the `ollamalocal` provider,
+  gpt-oss still fails READ tasks on files past its comfort size
+  (rules.go ~200 lines): attempt 1 dies in output-token truncation loops,
+  attempt 2 hallucinates an unrelated program instead of reading. Rule:
+  give small-model read tasks files < 100 lines, or pre-chunk into inline
+  context; treat file-size, not prompt quality, as the failure lever.
 - 2026-11-09 — OpenCode-native `ollama` provider + `general` agent: the model
   emits tool-call hand-rails ("We have tools... Use opencode." + raw JSON args)
   as TEXT instead of tool calls — 1/7 useful. Root evidence: session DB shows
